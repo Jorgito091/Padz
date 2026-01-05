@@ -1,43 +1,62 @@
 # Padz - Trello Clone Project
 
-Un gestor de tareas tipo Trello desarrollado con un stack moderno y escalable.
+Un gestor de tareas tipo Trello moderno y elegante, diseñado con un enfoque en estética premium y seguridad robusta.
 
 ## 🚀 Estado Actual
-El proyecto se encuentra en la fase inicial del desarrollo del **Backend**. Se ha implementado la infraestructura base necesaria para gestionar tableros, listas y tarjetas.
+El proyecto ha evolucionado a una aplicación **Full Stack** completa.
+- **Backend:** API robusta con autenticación JWT y validación de propiedad (Ownership).
+- **Frontend:** Interfaz moderna desarrollada con React, utilizando efectos de Glassmorphism y micro-animaciones.
 
-## 🛠️ Stack Tecnológico (Backend)
+## 🛠️ Stack Tecnológico
+
+### Backend
 - **Lenguaje:** TypeScript
 - **Framework:** Express.js
+- **Seguridad:** JWT (JSON Web Tokens) & Bcrypt para hashing de contraseñas.
 - **Base de Datos:** SQLite (Local)
 - **ORM:** Prisma 7 (con Driver Adapters)
-- **Entorno de ejecución:** Node.js
+- **Entorno:** Node.js
+
+### Frontend
+- **Framework:** React 18 + Vite
+- **Lenguaje:** TypeScript
+- **Estilos:** Tailwind CSS
+- **Animaciones:** Framer Motion
+- **Iconos:** Lucide React
 
 ## 📂 Estructura del Proyecto
-- `/Back`: Servidor API y lógica de negocio.
-- `/Back/prisma`: Esquema de base de datos y migraciones.
-- `/Back/src/controllers`: Lógica de manejo de datos.
-- `/Back/src/routes`: Definición de endpoints de la API.
+- 📁 `/Back`: Servidor API, lógica de negocio y seguridad.
+- 📁 `/Front`: Aplicación cliente React con diseño moderno.
+- 📁 `/Back/prisma`: Esquema de base de datos y configuración del ORM.
 
-## 🛠️ Cómo empezar (Backend)
-1. Navega a la carpeta del backend:
-   ```bash
-   cd Back
-   ```
-2. Instala las dependencias:
-   ```bash
-   npm install
-   ```
-3. Genera el cliente de Prisma:
-   ```bash
-   npx prisma generate
-   ```
-4. Levanta el servidor en modo desarrollo:
-   ```bash
-   npm run dev
-   ```
+## 🔐 Seguridad y Autenticación
+El sistema utiliza un flujo de autenticación basado en **Tokens JWT**:
+1. Los usuarios se registran/inician sesión para obtener un token.
+2. Todas las rutas de Tableros, Listas y Tarjetas están protegidas por el middleware de autenticación.
+3. Se aplica un control de **Propiedad (Ownership)**: los usuarios solo pueden ver y modificar recursos (tableros, listas, tarjetas) de los cuales son dueños.
 
-## 📋 Endpoints Principales
-- `GET /health`: Verifica que el servidor esté funcionando.
-- `GET /api/boards`: Obtiene todos los tableros.
-- `GET /api/boards/:id`: Obtiene un tablero detallado (con sus listas y tarjetas).
+## 📋 API Endpoints Principales
+
+### Autenticación
+- `POST /api/auth/register`: Registro de nuevos usuarios.
+- `POST /api/auth/login`: Inicio de sesión y obtención de token.
+
+### Gestión (Requieren Token Bearer)
+- `GET /api/boards`: Obtiene los tableros del usuario autenticado.
 - `POST /api/boards`: Crea un nuevo tablero.
+- `GET /api/boards/:id`: Detalle completo de un tablero (listas y tarjetas).
+- `GET /api/lists?boardId=ID`: Listas de un tablero específico.
+- `POST /api/cards`: Crea una tarjeta en una lista.
+
+## 🛠️ Cómo empezar
+
+### Backend
+1. `cd Back`
+2. `npm install`
+3. `npx prisma db push` (Sincroniza el esquema)
+4. `npm run dev`
+
+### Frontend
+1. `cd Front`
+2. `npm install`
+3. `npm run dev`

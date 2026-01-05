@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import * as listController from '../controllers/listController';
+import { authenticate } from '../middleware/authMiddleware';
 
 const router = Router();
+
+router.use(authenticate);
 
 router.get('/', listController.getLists);
 router.post('/', listController.createList);
