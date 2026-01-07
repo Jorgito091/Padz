@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,31 +11,31 @@ model User {
   email     String   @unique
   password  String
   name      String
-  boards    Board[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  boards    Board[]
 }
 
 model Board {
   id        String   @id @default(uuid())
   title     String
   bgImage   String?
-  owner     User     @relation(fields: [ownerId], references: [id])
   ownerId   String
-  lists     List[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  owner     User     @relation(fields: [ownerId], references: [id])
+  lists     List[]
 }
 
 model List {
   id        String   @id @default(uuid())
   title     String
   order     Int
-  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
   boardId   String
-  cards     Card[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  cards     Card[]
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
 }
 
 model Card {
@@ -46,8 +43,8 @@ model Card {
   title       String
   description String?
   order       Int
-  list        List     @relation(fields: [listId], references: [id], onDelete: Cascade)
   listId      String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  list        List     @relation(fields: [listId], references: [id], onDelete: Cascade)
 }
