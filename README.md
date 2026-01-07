@@ -50,13 +50,20 @@ El sistema utiliza un flujo de autenticación basado en **Tokens JWT**:
 
 ## 🛠️ Cómo empezar
 
-### Backend
+El proyecto tiene dos carpetas principales que deben ejecutarse por separado.
+
+### 1. Backend (API)
+Asegúrate de tener instalado Node.js y SQLite.
 1. `cd Back`
 2. `npm install`
-3. `npx prisma db push` (Sincroniza el esquema)
-4. `npm run dev`
+3. `npx prisma db push` (Si es la primera vez o cambiaste el esquema)
+4. `npm run dev` (El servidor correrá en `http://localhost:3000`)
 
-### Frontend
-1. `cd Front`
-2. `npm install`
-3. `npm run dev`
+### 2. Frontend (React)
+1. Abrir **otra terminal** (sin cerrar la del backend).
+2. `cd Front`
+3. `npm install`
+4. `npm run dev` (La aplicación correrá en `http://localhost:3000` por defecto, o la que indique Vite)
+
+---
+*Nota: He actualizado el frontend a **Vite 6** para asegurar compatibilidad con React 18 y ofrecer un desarrollo más rápido.*
