@@ -1,31 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, LayoutGrid, ArrowLeft } from 'lucide-react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Plus, LayoutGrid, ArrowLeft, LogOut, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from './context/AuthContext';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 
-// Mock types
-interface Card {
-  id: number;
-  content: string;
-}
+// Types
+interface Card { id: number; content: string; }
+interface List { id: number; title: string; cards: Card[]; }
+interface Board { id: number; title: string; }
 
-interface List {
-  id: number;
-  title: string;
-  cards: Card[];
-}
+// Protected Route Component
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isLoading } = useAuth();
 
-interface Board {
-  id: number;
-  title: string;
-}
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0c]">
+        <Loader2 className="w-10 h-10 text-purple-600 animate-spin" />
+      </div>
+    );
+  }
 
-export default function App() {
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const Dashboard = () => {
+  const { user, logout } = useAuth();
   const [view, setView] = useState<'dashboard' | 'board'>('dashboard');
   const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate initial load
     const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
   }, []);
@@ -46,11 +57,6 @@ export default function App() {
       id: 102,
       title: 'En Proceso',
       cards: [{ id: 3, content: 'Setup React + TS' }]
-    },
-    {
-      id: 103,
-      title: 'Hecho',
-      cards: [{ id: 4, content: 'Estructura Vanilla' }]
     }
   ];
 
@@ -63,12 +69,28 @@ export default function App() {
     <div className="min-h-screen">
       {/* Navbar */}
       <nav className="navbar glass sticky top-0 z-50 flex justify-between items-center px-8 py-4 mb-8">
-        <div className="text-2xl font-bold bg-gradient-to-r from-accent to-indigo-400 bg-clip-text text-transparent">
-          Padz
+        <div className="flex items-center gap-8">
+          <div className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-indigo-400 bg-clip-text text-transparent cursor-pointer" onClick={() => setView('dashboard')}>
+            Padz
+          </div>
+          <div className="hidden md:flex gap-4">
+            <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:opacity-90 shadow-lg shadow-purple-500/20 transition-all flex items-center gap-2">
+              <Plus size={18} /> Crear Tablero
+            </button>
+          </div>
         </div>
-        <div className="hidden md:flex gap-4">
-          <button className="px-4 py-2 bg-accent text-white rounded-lg font-semibold hover:bg-accentHover shadow-lg shadow-accent/20 transition-all flex items-center gap-2">
-            <Plus size={18} /> Crear Tablero
+
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col items-end hidden sm:flex">
+            <span className="text-sm font-semibold text-white">{user?.name}</span>
+            <span className="text-xs text-gray-400">{user?.email}</span>
+          </div>
+          <button
+            onClick={logout}
+            className="p-2.5 glass glass-hover rounded-xl text-gray-400 hover:text-red-400 transition-all"
+            title="Cerrar sesión"
+          >
+            <LogOut size={20} />
           </button>
         </div>
       </nav>
@@ -83,31 +105,33 @@ export default function App() {
               exit={{ opacity: 0, y: -20 }}
             >
               <div className="flex items-center gap-3 mb-8">
-                <LayoutGrid className="text-accent" />
+                <LayoutGrid className="text-purple-500" />
                 <h1 className="text-3xl font-bold">Mis Tableros</h1>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {loading ? (
                   [1, 2, 3, 4].map((n) => (
-                    <div key={n} className="h-32 rounded-xl skeleton shadow-xl" />
+                    <div key={n} className="h-40 rounded-2xl glass shadow-xl animate-pulse opacity-50" />
                   ))
                 ) : (
                   <>
                     {boards.map((board) => (
                       <motion.div
                         key={board.id}
-                        whileHover={{ scale: 1.02 }}
+                        whileHover={{ scale: 1.02, y: -5 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleBoardClick(board)}
-                        className="h-32 p-6 glass glass-hover cursor-pointer flex flex-col justify-end shadow-xl"
+                        className="h-40 p-6 glass glass-hover cursor-pointer border-white/5 hover:border-purple-500/30 flex flex-col justify-end shadow-xl"
                       >
-                        <h3 className="text-xl font-semibold">{board.title}</h3>
+                        <h3 className="text-xl font-bold text-white">{board.title}</h3>
                       </motion.div>
                     ))}
-                    <div className="h-32 p-6 rounded-xl border-2 border-dashed border-white/10 hover:border-accent/50 hover:bg-white/5 transition-all cursor-pointer flex items-center justify-center gap-2 text-textSecondary hover:text-white group">
-                      <Plus className="group-hover:text-accent" />
-                      <span>Nuevo Tablero</span>
+                    <div className="h-40 p-6 rounded-2xl border-2 border-dashed border-white/5 hover:border-purple-500/50 hover:bg-white/5 transition-all cursor-pointer flex flex-col items-center justify-center gap-3 text-gray-400 hover:text-white group">
+                      <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-purple-500/20 group-hover:text-purple-400 transition-all">
+                        <Plus />
+                      </div>
+                      <span className="font-medium">Nuevo Tablero</span>
                     </div>
                   </>
                 )}
@@ -123,7 +147,7 @@ export default function App() {
               <div className="flex items-center gap-4 mb-8">
                 <button
                   onClick={() => setView('dashboard')}
-                  className="p-2 glass glass-hover rounded-lg text-textSecondary"
+                  className="p-2.5 glass glass-hover rounded-xl text-gray-400 hover:text-white transition-all"
                 >
                   <ArrowLeft size={20} />
                 </button>
@@ -132,26 +156,26 @@ export default function App() {
 
               <div className="flex gap-6 overflow-x-auto pb-6 items-start">
                 {lists.map((list) => (
-                  <div key={list.id} className="min-w-[300px] max-w-[300px] glass rounded-xl p-4 shadow-2xl">
-                    <div className="flex justify-between items-center mb-4 px-1">
-                      <h3 className="font-bold">{list.title}</h3>
-                      <button className="text-textSecondary hover:text-white"><Plus size={16} /></button>
+                  <div key={list.id} className="min-w-[320px] max-w-[320px] backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-4 shadow-2xl">
+                    <div className="flex justify-between items-center mb-5 px-1">
+                      <h3 className="font-bold text-white/90">{list.title}</h3>
+                      <button className="p-1.5 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-all"><Plus size={18} /></button>
                     </div>
                     <div className="space-y-3">
                       {list.cards.map((card) => (
-                        <div key={card.id} className="bg-[#1e293b]/50 p-3 rounded-lg border border-white/5 hover:border-accent/40 cursor-grab active:cursor-grabbing transition-all shadow-sm">
+                        <div key={card.id} className="bg-white/5 p-4 rounded-xl border border-white/5 hover:border-purple-500/40 cursor-grab active:cursor-grabbing transition-all shadow-sm text-gray-300">
                           {card.content}
                         </div>
                       ))}
                     </div>
-                    <button className="w-full mt-4 p-2 text-left text-sm text-textSecondary hover:text-white hover:bg-white/5 rounded-lg transition-all">
-                      + Añadir tarjeta
+                    <button className="w-full mt-5 py-2.5 px-3 text-left text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all flex items-center gap-2">
+                      <Plus size={16} /> Añadir tarjeta
                     </button>
                   </div>
                 ))}
 
-                <button className="min-w-[300px] glass bg-white/5 hover:bg-white/10 rounded-xl p-4 text-left font-semibold text-textSecondary hover:text-white transition-all border-dashed border-2 border-white/10">
-                  + Añadir lista
+                <button className="min-w-[320px] backdrop-blur-xl bg-white/[0.02] hover:bg-white/[0.05] rounded-2xl p-5 text-left font-semibold text-gray-400 hover:text-white transition-all border-dashed border-2 border-white/10 flex items-center gap-3">
+                  <Plus size={20} /> Añadir lista
                 </button>
               </div>
             </motion.div>
@@ -159,5 +183,23 @@ export default function App() {
         </AnimatePresence>
       </main>
     </div>
+  );
+};
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }

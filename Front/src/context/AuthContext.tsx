@@ -1,0 +1,85 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import api from '../services/api';
+
+interface User {
+    id: string;
+    email: string;
+    name: string;
+}
+
+interface AuthContextType {
+    user: User | null;
+    token: string | null;
+    login: (email: string, password: string) => Promise<void>;
+    register: (name: string, email: string, password: string) => Promise<void>;
+    logout: () => void;
+    isLoading: boolean;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [user, setUser] = useState<User | null>(null);
+    const [token, setToken] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const savedToken = localStorage.getItem('padz_token');
+        const savedUser = localStorage.getItem('padz_user');
+
+        if (savedToken && savedUser) {
+            setToken(savedToken);
+            setUser(JSON.parse(savedUser));
+        }
+        setIsLoading(false);
+    }, []);
+
+    const login = async (email: string, password: string) => {
+        try {
+            const response = await api.post('/auth/login', { email, password });
+            const { user, token } = response.data;
+
+            setUser(user);
+            setToken(token);
+            localStorage.setItem('padz_token', token);
+            localStorage.setItem('padz_user', JSON.stringify(user));
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const register = async (name: string, email: string, password: string) => {
+        try {
+            const response = await api.post('/auth/register', { name, email, password });
+            const { user, token } = response.data;
+
+            setUser(user);
+            setToken(token);
+            localStorage.setItem('padz_token', token);
+            localStorage.setItem('padz_user', JSON.stringify(user));
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const logout = () => {
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem('padz_token');
+        localStorage.removeItem('padz_user');
+    };
+
+    return (
+        <AuthContext.Provider value={{ user, token, login, register, logout, isLoading }}>
+            {children}
+        </AuthContext.Provider>
+    );
+};
+
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+};
