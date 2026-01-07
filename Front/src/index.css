@@ -3,17 +3,17 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --accent: #38bdf8;
-  --accent-hover: #0ea5e9;
-  --card-bg: rgba(255, 255, 255, 0.05);
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --accent: #f97316;
+  --accent-hover: #ea580c;
+  --card-bg: rgba(255, 255, 255, 0.03);
 }
 
 body {
-  @apply bg-[#0f172a] text-[#f8fafc] font-sans antialiased;
+  @apply bg-[#121212] text-white font-sans antialiased;
   min-height: 100vh;
 }
 

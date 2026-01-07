@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogIn, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import Logo from '../components/Logo';
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -31,8 +32,8 @@ const LoginPage: React.FC = () => {
     return (
         <div className="min-h-screen flex items-center justify-center bg-[#0a0a0c] relative overflow-hidden px-4">
             {/* Background blobs */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-600/10 rounded-full blur-[120px] animate-pulse" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-600/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -42,8 +43,8 @@ const LoginPage: React.FC = () => {
             >
                 <div className="backdrop-blur-xl bg-white/5 border border-white/10 p-8 rounded-3xl shadow-2xl">
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 to-blue-600 mb-4 shadow-lg shadow-purple-500/20">
-                            <LogIn className="w-8 h-8 text-white" />
+                        <div className="flex justify-center mb-6">
+                            <Logo size={80} />
                         </div>
                         <h1 className="text-3xl font-bold text-white mb-2">Bienvenido a Padz</h1>
                         <p className="text-gray-400">Inicia sesión para gestionar tus proyectos</p>
@@ -64,14 +65,14 @@ const LoginPage: React.FC = () => {
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-300 ml-1">Email</label>
                             <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-purple-500 transition-colors">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-orange-500 transition-colors">
                                     <Mail className="w-5 h-5" />
                                 </div>
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="block w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+                                    className="block w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all"
                                     placeholder="tu@email.com"
                                     required
                                 />
@@ -81,17 +82,17 @@ const LoginPage: React.FC = () => {
                         <div className="space-y-2">
                             <div className="flex justify-between items-center ml-1">
                                 <label className="text-sm font-medium text-gray-300">Contraseña</label>
-                                <a href="#" className="text-xs text-purple-400 hover:text-purple-300 transition-colors">¿Olvidaste tu contraseña?</a>
+                                <a href="#" className="text-xs text-orange-400 hover:text-orange-300 transition-colors">¿Olvidaste tu contraseña?</a>
                             </div>
                             <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-purple-500 transition-colors">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-orange-500 transition-colors">
                                     <Lock className="w-5 h-5" />
                                 </div>
                                 <input
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="block w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+                                    className="block w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all"
                                     placeholder="••••••••"
                                     required
                                 />
@@ -101,22 +102,19 @@ const LoginPage: React.FC = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
+                            className="w-full py-4 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl shadow-lg shadow-orange-950/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
                         >
                             {isLoading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
-                                <>
-                                    <LogIn className="w-5 h-5" />
-                                    Entrar
-                                </>
+                                "Iniciar Sesión"
                             )}
                         </button>
                     </form>
 
                     <p className="mt-8 text-center text-gray-400">
                         ¿No tienes cuenta?{' '}
-                        <Link to="/register" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">
+                        <Link to="/register" className="text-orange-400 hover:text-orange-300 font-medium transition-colors">
                             Regístrate gratis
                         </Link>
                     </p>
