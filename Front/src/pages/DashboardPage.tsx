@@ -75,6 +75,12 @@ const DashboardPage: React.FC = () => {
         })
     );
 
+    // Edit State
+    const [editingCard, setEditingCard] = useState<Card | null>(null);
+    const [editCardTitle, setEditCardTitle] = useState('');
+    const [editCardDescription, setEditCardDescription] = useState('');
+
+
     useEffect(() => {
         fetchBoards();
     }, []);
@@ -163,6 +169,67 @@ const DashboardPage: React.FC = () => {
             setActiveListId(null);
         } catch (error) {
             console.error('Error creating card:', error);
+        }
+    };
+
+    const handleDeleteCard = async (cardId: string, listId: string) => {
+        if (!selectedBoard) return;
+
+        // Optimistic update
+        const updatedLists = selectedBoard.lists?.map(l => {
+            if (l.id === listId) {
+                return { ...l, cards: l.cards.filter(c => c.id !== cardId) };
+            }
+            return l;
+        });
+        setSelectedBoard({ ...selectedBoard, lists: updatedLists });
+
+        try {
+            await api.delete(`/cards/${cardId}`);
+        } catch (error) {
+            console.error('Error deleting card:', error);
+            // Revert on error (optional, for MVP we skip complex revert logic)
+            fetchBoardDetail(selectedBoard.id);
+        }
+    };
+
+    const openEditModal = (card: Card) => {
+        setEditingCard(card);
+        setEditCardTitle(card.title);
+        setEditCardDescription(card.description || '');
+    };
+
+    const handleUpdateCard = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingCard || !selectedBoard) return;
+
+        // Optimistic update
+        const updatedLists = selectedBoard.lists?.map(l => {
+            if (l.cards.some(c => c.id === editingCard.id)) {
+                return {
+                    ...l,
+                    cards: l.cards.map(c =>
+                        c.id === editingCard.id
+                            ? { ...c, title: editCardTitle, description: editCardDescription }
+                            : c
+                    )
+                };
+            }
+            return l;
+        });
+        setSelectedBoard({ ...selectedBoard, lists: updatedLists });
+        setEditingCard(null);
+
+        try {
+            await api.put(`/cards/${editingCard.id}`, {
+                title: editCardTitle,
+                description: editCardDescription,
+                order: editingCard.order,
+                listId: editingCard.listId
+            });
+        } catch (error) {
+            console.error('Error updating card:', error);
+            fetchBoardDetail(selectedBoard.id);
         }
     };
 
@@ -517,6 +584,8 @@ const DashboardPage: React.FC = () => {
                                                                     id={card.id}
                                                                     title={card.title}
                                                                     description={card.description}
+                                                                    onEdit={() => openEditModal(card)}
+                                                                    onDelete={() => handleDeleteCard(card.id, list.id)}
                                                                 />
                                                             ))}
                                                         </div>
@@ -605,6 +674,54 @@ const DashboardPage: React.FC = () => {
                         </motion.div>
                     )}
                 </AnimatePresence>
+
+                {/* Edit Card Modal */}
+                {editingCard && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="w-full max-w-md bg-[#1a1a1c] border border-white/10 rounded-2xl p-6 shadow-2xl"
+                        >
+                            <h2 className="text-xl font-bold mb-4">Editar Tarjeta</h2>
+                            <form onSubmit={handleUpdateCard} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Título</label>
+                                    <input
+                                        type="text"
+                                        value={editCardTitle}
+                                        onChange={(e) => setEditCardTitle(e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                                        autoFocus
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Descripción</label>
+                                    <textarea
+                                        value={editCardDescription}
+                                        onChange={(e) => setEditCardDescription(e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50 h-32 resize-none"
+                                    />
+                                </div>
+                                <div className="flex justify-end gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingCard(null)}
+                                        className="px-4 py-2 hover:bg-white/5 rounded-lg text-gray-400 transition-colors"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-bold transition-colors"
+                                    >
+                                        Guardar
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
             </main>
         </div>
     );

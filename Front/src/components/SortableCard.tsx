@@ -2,15 +2,18 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
+import { Pencil, Trash2 } from 'lucide-react';
 
 interface CardProps {
     id: string;
     title: string;
     description?: string;
     onClick?: () => void;
+    onEdit?: () => void;
+    onDelete?: () => void;
 }
 
-export const SortableCard: React.FC<CardProps> = ({ id, title, description, onClick }) => {
+export const SortableCard: React.FC<CardProps> = ({ id, title, description, onClick, onEdit, onDelete }) => {
     const {
         attributes,
         listeners,
@@ -34,10 +37,35 @@ export const SortableCard: React.FC<CardProps> = ({ id, title, description, onCl
                 onClick={onClick}
                 className={`bg-white/5 p-4 rounded-xl border border-white/5 hover:border-orange-500/40 cursor-grab active:cursor-grabbing transition-all shadow-sm text-gray-300 group relative ${isDragging ? 'ring-2 ring-orange-500' : ''}`}
             >
-                <div>{title}</div>
-                {description && (
-                    <div className="text-xs text-gray-500 mt-2 line-clamp-2">{description}</div>
-                )}
+                <div className="flex justify-between items-start gap-2">
+                    <div className="flex-1">
+                        <div className="font-medium text-white">{title}</div>
+                        {description && (
+                            <div className="text-xs text-gray-500 mt-2 line-clamp-2">{description}</div>
+                        )}
+                    </div>
+
+                    {!isDragging && (onEdit || onDelete) && (
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {onEdit && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                                    className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-blue-400 transition-colors"
+                                >
+                                    <Pencil size={14} />
+                                </button>
+                            )}
+                            {onDelete && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                                    className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-red-400 transition-colors"
+                                >
+                                    <Trash2 size={14} />
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
             </motion.div>
         </div>
     );
