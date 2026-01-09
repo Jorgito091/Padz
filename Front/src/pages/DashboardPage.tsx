@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, LayoutGrid, ArrowLeft, LogOut, Loader2, X, Send } from 'lucide-react';
+import { Plus, LayoutGrid, ArrowLeft, LogOut, Loader2, X, Send, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     DndContext,
@@ -189,6 +189,21 @@ const DashboardPage: React.FC = () => {
         } catch (error) {
             console.error('Error deleting card:', error);
             // Revert on error (optional, for MVP we skip complex revert logic)
+            fetchBoardDetail(selectedBoard.id);
+        }
+    };
+
+    const handleDeleteList = async (listId: string) => {
+        if (!selectedBoard) return;
+
+        // Optimistic update
+        const updatedLists = selectedBoard.lists?.filter(l => l.id !== listId);
+        setSelectedBoard({ ...selectedBoard, lists: updatedLists });
+
+        try {
+            await api.delete(`/lists/${listId}`);
+        } catch (error) {
+            console.error('Error deleting list:', error);
             fetchBoardDetail(selectedBoard.id);
         }
     };
@@ -567,9 +582,18 @@ const DashboardPage: React.FC = () => {
                                         <>
                                             {selectedBoard?.lists?.map((list) => (
                                                 <div key={list.id} className="min-w-[320px] max-w-[320px] backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-4 shadow-2xl">
-                                                    <div className="flex justify-between items-center mb-5 px-1 text-orange-400">
+                                                    <div className="flex justify-between items-center mb-5 px-1 text-orange-400 group/list-header">
                                                         <h3 className="font-bold uppercase text-xs tracking-widest">{list.title}</h3>
-                                                        <button className="p-1.5 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-all"><Plus size={18} /></button>
+                                                        <div className="flex gap-1 items-center">
+                                                            <button
+                                                                onClick={() => handleDeleteList(list.id)}
+                                                                className="p-1.5 hover:bg-white/5 rounded-lg text-gray-500 hover:text-red-400 transition-all opacity-0 group-hover/list-header:opacity-100"
+                                                                title="Eliminar lista"
+                                                            >
+                                                                <Trash2 size={15} />
+                                                            </button>
+                                                            <button className="p-1.5 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-all"><Plus size={18} /></button>
+                                                        </div>
                                                     </div>
 
                                                     <SortableContext
