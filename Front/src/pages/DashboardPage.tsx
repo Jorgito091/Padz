@@ -41,7 +41,9 @@ interface List {
 interface Board {
     id: string;
     title: string;
+    description?: string;
     bgImage?: string;
+    bgColor?: string;
     lists?: List[];
 }
 
@@ -53,9 +55,12 @@ const DashboardPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [boardLoading, setBoardLoading] = useState(false);
 
-    // Creation States
-    const [isCreatingBoard, setIsCreatingBoard] = useState(false);
-    const [newBoardTitle, setNewBoardTitle] = useState('');
+    // Creation/Edit States
+    const [isBoardModalOpen, setIsBoardModalOpen] = useState(false);
+    const [editingBoard, setEditingBoard] = useState<Board | null>(null);
+    const [boardForm, setBoardForm] = useState({ title: '', description: '', bgColor: 'from-orange-600 to-orange-500' });
+
+    // Lists & Cards States
     const [isCreatingList, setIsCreatingList] = useState(false);
     const [newListTitle, setNewListTitle] = useState('');
     const [activeListId, setActiveListId] = useState<string | null>(null);
@@ -75,7 +80,7 @@ const DashboardPage: React.FC = () => {
         })
     );
 
-    // Edit State
+    // Edit Card State
     const [editingCard, setEditingCard] = useState<Card | null>(null);
     const [editCardTitle, setEditCardTitle] = useState('');
     const [editCardDescription, setEditCardDescription] = useState('');
@@ -97,31 +102,59 @@ const DashboardPage: React.FC = () => {
         }
     };
 
-    const fetchBoardDetail = async (id: string) => {
+    const fetchBoardDetail = async (id: string, updateSelected = true) => {
         try {
-            setBoardLoading(true);
+            if (updateSelected) setBoardLoading(true);
             const response = await api.get(`/boards/${id}`);
-            setSelectedBoard(response.data);
+            if (updateSelected) setSelectedBoard(response.data);
+            return response.data;
         } catch (error) {
             console.error('Error fetching board detail:', error);
-            setView('dashboard');
+            if (updateSelected) setView('dashboard');
         } finally {
-            setBoardLoading(false);
+            if (updateSelected) setBoardLoading(false);
         }
     };
 
-    const handleCreateBoard = async (e: React.FormEvent) => {
+    const openCreateBoardModal = () => {
+        setEditingBoard(null);
+        setBoardForm({ title: '', description: '', bgColor: 'from-orange-600 to-orange-500' });
+        setIsBoardModalOpen(true);
+    };
+
+    const openEditBoardModal = (board: Board) => {
+        setEditingBoard(board);
+        setBoardForm({
+            title: board.title,
+            description: board.description || '',
+            bgColor: board.bgColor || 'from-orange-600 to-orange-500'
+        });
+        setIsBoardModalOpen(true);
+    };
+
+    const handleSaveBoard = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newBoardTitle.trim()) return;
+        if (!boardForm.title.trim()) return;
 
         try {
-            const response = await api.post('/boards', { title: newBoardTitle });
-            setBoards([...boards, response.data]);
-            setNewBoardTitle('');
-            setIsCreatingBoard(false);
-            handleBoardClick(response.data);
+            if (editingBoard) {
+                // Update
+                const response = await api.put(`/boards/${editingBoard.id}`, boardForm);
+                const updatedBoard = response.data;
+
+                // Update local state
+                setBoards(boards.map(b => b.id === updatedBoard.id ? updatedBoard : b));
+                if (selectedBoard?.id === updatedBoard.id) {
+                    setSelectedBoard({ ...selectedBoard, ...updatedBoard });
+                }
+            } else {
+                // Create
+                const response = await api.post('/boards', boardForm);
+                setBoards([...boards, response.data]);
+            }
+            setIsBoardModalOpen(false);
         } catch (error) {
-            console.error('Error creating board:', error);
+            console.error('Error saving board:', error);
         }
     };
 
@@ -290,25 +323,11 @@ const DashboardPage: React.FC = () => {
                     }
                     if (index === overListIndex) {
                         const activeCard = prev.lists![activeListIndex].cards.find(c => c.id === active.id)!;
-                        // Just push for simple drag over, refined positioning happens in DragEnd or more complex DragOver logic
-                        // Here we are just mocking the visual movement for simplicity in this step.
-                        // Ideally we find the insertion index.
-
-                        // NOTE: For simplicity, we just add to the list. 
-                        // Real logic for exact positioning requires calculating indexes relative to overId.
-                        // If overId is a card, we insert near it. If it's the container, we insert at end (or beginning).
-
-                        // We will rely on DragEnd for the persistent state, DragOver is just visual.
-                        // Actually DND Kit recommends updating state during DragOver for sorting between containers.
-
                         const items = list.cards;
-                        const activeItems = prev.lists![activeListIndex].cards;
-                        const activeIndex = activeItems.findIndex((i) => i.id === active.id);
                         const overIndex = items.findIndex((i) => i.id === overId);
 
                         let newIndex;
                         if (overId in prev.lists!) {
-                            // We're over a container
                             newIndex = items.length + 1;
                         } else {
                             const isBelowOverItem =
@@ -318,7 +337,6 @@ const DashboardPage: React.FC = () => {
                                 over.rect.top + over.rect.height;
 
                             const modifier = isBelowOverItem ? 1 : 0;
-
                             newIndex = overIndex >= 0 ? overIndex + modifier : items.length + 1;
                         }
 
@@ -359,18 +377,15 @@ const DashboardPage: React.FC = () => {
 
                 let newIndex;
                 if (overId === overContainer) {
-                    // Dropped on a container
                     newIndex = overList.cards.length;
                 } else {
                     newIndex = overIndex >= 0 ? overIndex : overList.cards.length;
                 }
 
-                // If same container, just reorder using arrayMove
                 if (activeContainer === overContainer) {
                     if (activeIndex !== overIndex) {
                         const newCards = arrayMove(activeList.cards, activeIndex, newIndex);
 
-                        // Optimistic Update
                         const updatedLists = selectedBoard.lists.map(l => {
                             if (l.id === activeContainer) {
                                 return { ...l, cards: newCards };
@@ -379,11 +394,9 @@ const DashboardPage: React.FC = () => {
                         });
                         setSelectedBoard({ ...selectedBoard, lists: updatedLists });
 
-                        // API Update (Reorder all cards in list to be safe)
-                        // In production, we'd throttle this or use specific endpoint
                         newCards.forEach(async (card, index) => {
                             await api.put(`/cards/${card.id}`, {
-                                title: card.title, // keep title
+                                title: card.title,
                                 description: card.description,
                                 listId: activeContainer,
                                 order: index
@@ -391,36 +404,17 @@ const DashboardPage: React.FC = () => {
                         });
                     }
                 } else {
-                    // Moved to different container
-                    // The state update in DragOver handles the moving. 
-                    // DragEnd just finalizes.
-                    // But if we relied only on DragOver, the item is already there.
-
-                    // We need to persist the change to the API.
-
-                    // 1. Find the new list and the card's position.
-                    // Since DragOver updated state, the card IS in the overContainer now.
-
                     const card = overList.cards.find(c => c.id === active.id);
                     if (card) {
                         const newOrder = overList.cards.findIndex(c => c.id === active.id);
-
-                        // Update the card's listId and order
                         await api.put(`/cards/${active.id}`, {
                             title: card.title,
                             description: card.description,
                             listId: overContainer,
                             order: newOrder
                         });
-
-                        // Reorder others if necessary? simpler to just update this one for MVP,
-                        // assuming others sort around it on refresh or we update all.
-                        // Lets update all in target list to be consistent.
                         overList.cards.forEach(async (c, idx) => {
-                            if (c.id !== active.id) { // optimization
-                                // Only need to update if order changed significantly
-                                // For robustness, we might just update the moved one and hope 'order' doesn't collide too much
-                                // or update all.
+                            if (c.id !== active.id) {
                                 await api.put(`/cards/${c.id}`, {
                                     title: c.title,
                                     description: c.description,
@@ -433,16 +427,24 @@ const DashboardPage: React.FC = () => {
                 }
             }
         }
-
         setActiveId(null);
     };
 
 
+    const colorOptions = [
+        'from-orange-600 to-orange-500',
+        'from-blue-600 to-blue-500',
+        'from-emerald-600 to-emerald-500',
+        'from-purple-600 to-purple-500',
+        'from-pink-600 to-pink-500',
+        'from-zinc-800 to-zinc-900', // Neutral/Dark
+    ];
+
     return (
         <div className="min-h-screen bg-[#0a0a0c] text-white">
-            {/* Background blobs */}
-            <div className="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-600/5 rounded-full blur-[120px] pointer-events-none" />
-            <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-600/5 rounded-full blur-[120px] pointer-events-none" />
+            {/* Background blobs based on selected board color if active, else default orange */}
+            <div className={`fixed top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] pointer-events-none transition-colors duration-700 ${selectedBoard?.bgColor ? `bg-gradient-to-br ${selectedBoard.bgColor} opacity-20` : 'bg-orange-600/5'}`} />
+            <div className={`fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] pointer-events-none transition-colors duration-700 ${selectedBoard?.bgColor ? `bg-gradient-to-tl ${selectedBoard.bgColor} opacity-20` : 'bg-orange-600/5'}`} />
 
             {/* Navbar */}
             <nav className="sticky top-0 z-50 backdrop-blur-xl bg-white/5 border-b border-white/10 flex justify-between items-center px-8 py-4 mb-8">
@@ -459,7 +461,7 @@ const DashboardPage: React.FC = () => {
                     {view === 'dashboard' && (
                         <div className="hidden md:flex gap-4">
                             <button
-                                onClick={() => setIsCreatingBoard(true)}
+                                onClick={openCreateBoardModal}
                                 className="px-4 py-2 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-500 shadow-lg shadow-orange-950/20 transition-all flex items-center gap-2"
                             >
                                 <Plus size={18} /> Crear Tablero
@@ -469,6 +471,14 @@ const DashboardPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
+                    {view === 'board' && selectedBoard && (
+                        <button
+                            onClick={() => openEditBoardModal(selectedBoard)}
+                            className="px-3 py-1.5 text-sm bg-white/5 border border-white/10 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-all"
+                        >
+                            Configuración
+                        </button>
+                    )}
                     <div className="flex flex-col items-end hidden sm:flex">
                         <span className="text-sm font-semibold text-white">{user?.name}</span>
                         <span className="text-xs text-gray-400">{user?.email}</span>
@@ -510,38 +520,29 @@ const DashboardPage: React.FC = () => {
                                                 whileHover={{ scale: 1.02, y: -5 }}
                                                 whileTap={{ scale: 0.98 }}
                                                 onClick={() => handleBoardClick(board)}
-                                                className="h-40 p-6 backdrop-blur-xl bg-white/5 border border-white/5 hover:border-orange-500/30 rounded-2xl cursor-pointer flex flex-col justify-end shadow-xl transition-all group overflow-hidden relative"
+                                                className={`h-40 p-6 backdrop-blur-xl bg-white/5 border border-white/5 hover:border-white/20 rounded-2xl cursor-pointer flex flex-col justify-end shadow-xl transition-all group overflow-hidden relative`}
                                             >
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent group-hover:from-orange-600/20 transition-all" />
-                                                <h3 className="relative z-10 text-xl font-bold text-white group-hover:text-orange-400 transition-colors uppercase tracking-tight">{board.title}</h3>
+                                                {/* Background Gradient/Color */}
+                                                <div className={`absolute inset-0 bg-gradient-to-br ${board.bgColor || 'from-orange-600/20 to-orange-900/20'} opacity-40 group-hover:opacity-60 transition-all`} />
+
+                                                <div className="relative z-10">
+                                                    <h3 className="text-xl font-bold text-white group-hover:text-white transition-colors uppercase tracking-tight shadow-sm">{board.title}</h3>
+                                                    {board.description && (
+                                                        <p className="text-xs text-gray-300 mt-1 line-clamp-2">{board.description}</p>
+                                                    )}
+                                                </div>
                                             </motion.div>
                                         ))}
-                                        {isCreatingBoard ? (
-                                            <form onSubmit={handleCreateBoard} className="h-40 p-6 backdrop-blur-xl bg-white/10 border border-orange-500/50 rounded-2xl shadow-xl flex flex-col justify-between">
-                                                <input
-                                                    autoFocus
-                                                    type="text"
-                                                    value={newBoardTitle}
-                                                    onChange={(e) => setNewBoardTitle(e.target.value)}
-                                                    placeholder="Título del tablero..."
-                                                    className="bg-transparent border-none focus:ring-0 text-white font-bold p-0 text-lg placeholder:text-gray-500"
-                                                />
-                                                <div className="flex gap-2">
-                                                    <button type="submit" className="flex-1 py-2 bg-orange-600 text-white rounded-lg text-sm font-bold">Crear</button>
-                                                    <button onClick={() => setIsCreatingBoard(false)} className="px-3 py-2 bg-white/5 rounded-lg text-gray-400"><X size={18} /></button>
-                                                </div>
-                                            </form>
-                                        ) : (
-                                            <div
-                                                onClick={() => setIsCreatingBoard(true)}
-                                                className="h-40 p-6 rounded-2xl border-2 border-dashed border-white/5 hover:border-orange-500/50 hover:bg-white/5 transition-all cursor-pointer flex flex-col items-center justify-center gap-3 text-gray-400 hover:text-white group"
-                                            >
-                                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-orange-500/20 group-hover:text-orange-400 transition-all">
-                                                    <Plus />
-                                                </div>
-                                                <span className="font-medium">Nuevo Tablero</span>
+
+                                        <div
+                                            onClick={openCreateBoardModal}
+                                            className="h-40 p-6 rounded-2xl border-2 border-dashed border-white/5 hover:border-orange-500/50 hover:bg-white/5 transition-all cursor-pointer flex flex-col items-center justify-center gap-3 text-gray-400 hover:text-white group"
+                                        >
+                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-orange-500/20 group-hover:text-orange-400 transition-all">
+                                                <Plus />
                                             </div>
-                                        )}
+                                            <span className="font-medium">Nuevo Tablero</span>
+                                        </div>
                                     </>
                                 )}
                             </div>
@@ -553,16 +554,21 @@ const DashboardPage: React.FC = () => {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
                         >
-                            <div className="flex items-center gap-4 mb-8">
+                            {/* Board Header */}
+                            <div className="flex items-center gap-4 mb-8 backdrop-blur-md bg-white/5 p-6 rounded-2xl border border-white/10 relative overflow-hidden">
+                                <div className={`absolute inset-0 bg-gradient-to-r ${selectedBoard?.bgColor || 'from-orange-600/20 to-orange-900/20'} opacity-20`} />
+
                                 <button
                                     onClick={() => setView('dashboard')}
-                                    className="p-2.5 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-all"
+                                    className="relative z-10 p-2.5 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-all"
                                 >
                                     <ArrowLeft size={20} />
                                 </button>
-                                <div>
-                                    <h1 className="text-3xl font-bold">{selectedBoard?.title}</h1>
-                                    <p className="text-sm text-gray-400">Panel de control</p>
+                                <div className="relative z-10">
+                                    <h1 className="text-3xl font-bold text-white">{selectedBoard?.title}</h1>
+                                    {selectedBoard?.description && (
+                                        <p className="text-sm text-gray-300 mt-1 max-w-2xl">{selectedBoard.description}</p>
+                                    )}
                                 </div>
                             </div>
 
@@ -740,6 +746,71 @@ const DashboardPage: React.FC = () => {
                                         className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-bold transition-colors"
                                     >
                                         Guardar
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+
+                {/* Create/Edit Board Modal */}
+                {isBoardModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="w-full max-w-md bg-[#1a1a1c] border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden"
+                        >
+                            <div className={`absolute inset-0 bg-gradient-to-br ${boardForm.bgColor} opacity-5`} />
+
+                            <h2 className="text-xl font-bold mb-4 relative z-10">{editingBoard ? 'Editar Tablero' : 'Nuevo Tablero'}</h2>
+                            <form onSubmit={handleSaveBoard} className="space-y-4 relative z-10">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Título</label>
+                                    <input
+                                        type="text"
+                                        value={boardForm.title}
+                                        onChange={(e) => setBoardForm({ ...boardForm, title: e.target.value })}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                                        placeholder="Ej: Proyecto Website"
+                                        autoFocus
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Descripción (Opcional)</label>
+                                    <textarea
+                                        value={boardForm.description}
+                                        onChange={(e) => setBoardForm({ ...boardForm, description: e.target.value })}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50 h-24 resize-none"
+                                        placeholder="¿De qué trata este tablero?"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Color de Fondo</label>
+                                    <div className="grid grid-cols-6 gap-2">
+                                        {colorOptions.map((color) => (
+                                            <button
+                                                key={color}
+                                                type="button"
+                                                onClick={() => setBoardForm({ ...boardForm, bgColor: color })}
+                                                className={`w-10 h-10 rounded-full bg-gradient-to-br ${color} transition-all ${boardForm.bgColor === color ? 'ring-2 ring-white scale-110' : 'hover:scale-105 opacity-80 hover:opacity-100'}`}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="flex justify-end gap-3 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsBoardModalOpen(false)}
+                                        className="px-4 py-2 hover:bg-white/5 rounded-lg text-gray-400 transition-colors"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-bold transition-colors shadow-lg shadow-orange-900/20"
+                                    >
+                                        {editingBoard ? 'Guardar Cambios' : 'Crear Tablero'}
                                     </button>
                                 </div>
                             </form>
