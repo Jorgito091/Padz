@@ -6,6 +6,7 @@ Un gestor de tareas tipo Trello moderno y elegante, diseñado con un enfoque en 
 El proyecto ha evolucionado a una aplicación **Full Stack** completa.
 - **Backend:** API robusta con autenticación JWT y validación de propiedad (Ownership).
 - **Frontend:** Interfaz moderna desarrollada con React, utilizando efectos de Glassmorphism y micro-animaciones.
+- **Personalización:** Ahora permite elegir colores de fondo y descripciones para los tableros.
 
 ## 🛠️ Stack Tecnológico
 
@@ -44,6 +45,7 @@ El sistema utiliza un flujo de autenticación basado en **Tokens JWT**:
 ### Gestión (Requieren Token Bearer)
 - `GET /api/boards`: Obtiene los tableros del usuario autenticado.
 - `POST /api/boards`: Crea un nuevo tablero.
+- `PUT /api/boards/:id`: Actualiza un tablero (título, descripción, color).
 - `GET /api/boards/:id`: Detalle completo de un tablero (listas y tarjetas).
 - `GET /api/lists?boardId=ID`: Listas de un tablero específico.
 - `POST /api/cards`: Crea una tarjeta en una lista.
@@ -57,7 +59,7 @@ Asegúrate de tener instalado Node.js y SQLite.
 1. `cd Back`
 2. `npm install`
 3. `npx prisma db push` (Si es la primera vez o cambiaste el esquema)
-4. `npm run dev` (El servidor correrá en `http://localhost:3001`)
+4. `npm run dev` (El servidor correrá en `http://localhost:3001` por defecto gracias al .env)
 
 ### 2. Frontend (React)
 1. Abrir **otra terminal** (sin cerrar la del backend).
