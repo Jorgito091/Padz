@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/authMiddleware';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../prisma';
@@ -56,5 +57,23 @@ export const login = async (req: Request, res: Response) => {
         res.json({ user: { id: user.id, email: user.email, name: user.name }, token });
     } catch (error) {
         res.status(500).json({ error: 'Error logging in' });
+    }
+};
+
+export const updateProfile = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.userId) return res.status(401).json({ error: 'Unauthorized' });
+
+        const { name, avatar } = req.body;
+
+        const updatedUser = await prisma.user.update({
+            where: { id: req.userId },
+            data: { name, avatar }
+        });
+
+        res.json({ user: { id: updatedUser.id, email: updatedUser.email, name: updatedUser.name, avatar: updatedUser.avatar } });
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        res.status(500).json({ error: 'Error updating profile' });
     }
 };

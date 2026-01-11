@@ -5,6 +5,7 @@ interface User {
     id: string;
     email: string;
     name: string;
+    avatar?: string;
 }
 
 interface AuthContextType {
@@ -13,6 +14,7 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<void>;
     register: (name: string, email: string, password: string) => Promise<void>;
     logout: () => void;
+    updateUser: (user: User) => void;
     isLoading: boolean;
 }
 
@@ -69,8 +71,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('padz_user');
     };
 
+    const updateUser = (updatedUser: User) => {
+        setUser(updatedUser);
+        localStorage.setItem('padz_user', JSON.stringify(updatedUser));
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, login, register, logout, isLoading }}>
+        <AuthContext.Provider value={{ user, token, login, register, logout, updateUser, isLoading }}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, LayoutGrid, ArrowLeft, LogOut, Loader2, X, Send, Trash2 } from 'lucide-react';
+import { Plus, LayoutGrid, ArrowLeft, LogOut, Loader2, X, Send, Trash2, Settings, UserCog } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     DndContext,
@@ -48,7 +48,7 @@ interface Board {
 }
 
 const DashboardPage: React.FC = () => {
-    const { user, logout } = useAuth();
+    const { user, logout, updateUser } = useAuth();
     const [view, setView] = useState<'dashboard' | 'board'>('dashboard');
     const [boards, setBoards] = useState<Board[]>([]);
     const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
@@ -59,6 +59,10 @@ const DashboardPage: React.FC = () => {
     const [isBoardModalOpen, setIsBoardModalOpen] = useState(false);
     const [editingBoard, setEditingBoard] = useState<Board | null>(null);
     const [boardForm, setBoardForm] = useState({ title: '', description: '', bgColor: 'from-orange-600 to-orange-500' });
+
+    // Profile State
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const [userForm, setUserForm] = useState({ name: '', avatar: '' });
 
     // Lists & Cards States
     const [isCreatingList, setIsCreatingList] = useState(false);
@@ -89,6 +93,12 @@ const DashboardPage: React.FC = () => {
     useEffect(() => {
         fetchBoards();
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            setUserForm({ name: user.name, avatar: user.avatar || '' });
+        }
+    }, [user]);
 
     const fetchBoards = async () => {
         try {
@@ -155,6 +165,18 @@ const DashboardPage: React.FC = () => {
             setIsBoardModalOpen(false);
         } catch (error) {
             console.error('Error saving board:', error);
+        }
+    };
+
+    const handleUpdateProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const response = await api.put('/auth/profile', userForm);
+            const { user } = response.data;
+            updateUser(user);
+            setIsProfileModalOpen(false);
+        } catch (error) {
+            console.error('Error updating profile:', error);
         }
     };
 
@@ -443,8 +465,8 @@ const DashboardPage: React.FC = () => {
     return (
         <div className="min-h-screen bg-[#0a0a0c] text-white">
             {/* Background blobs based on selected board color if active, else default orange */}
-            <div className={`fixed top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] pointer-events-none transition-colors duration-700 ${selectedBoard?.bgColor ? `bg-gradient-to-br ${selectedBoard.bgColor} opacity-20` : 'bg-orange-600/5'}`} />
-            <div className={`fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] pointer-events-none transition-colors duration-700 ${selectedBoard?.bgColor ? `bg-gradient-to-tl ${selectedBoard.bgColor} opacity-20` : 'bg-orange-600/5'}`} />
+            <div className={`fixed top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] pointer-events-none transition-colors duration-700 ${view === 'board' && selectedBoard?.bgColor ? `bg-gradient-to-br ${selectedBoard.bgColor} opacity-20` : 'bg-orange-600/5'}`} />
+            <div className={`fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] pointer-events-none transition-colors duration-700 ${view === 'board' && selectedBoard?.bgColor ? `bg-gradient-to-tl ${selectedBoard.bgColor} opacity-20` : 'bg-orange-600/5'}`} />
 
             {/* Navbar */}
             <nav className="sticky top-0 z-50 backdrop-blur-xl bg-white/5 border-b border-white/10 flex justify-between items-center px-8 py-4 mb-8">
@@ -471,14 +493,25 @@ const DashboardPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    {view === 'board' && selectedBoard && (
-                        <button
-                            onClick={() => openEditBoardModal(selectedBoard)}
-                            className="px-3 py-1.5 text-sm bg-white/5 border border-white/10 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-all"
-                        >
-                            Configuración
-                        </button>
-                    )}
+                    <button
+                        onClick={() => setIsProfileModalOpen(true)}
+                        className="group relative"
+                        title="Configuración de usuario"
+                    >
+                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/10 group-hover:border-orange-500/50 transition-all shadow-lg">
+                            {user?.avatar ? (
+                                <img
+                                    src={user.avatar}
+                                    alt={user.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-orange-400">
+                                    <UserCog size={20} />
+                                </div>
+                            )}
+                        </div>
+                    </button>
                     <div className="flex flex-col items-end hidden sm:flex">
                         <span className="text-sm font-semibold text-white">{user?.name}</span>
                         <span className="text-xs text-gray-400">{user?.email}</span>
@@ -564,12 +597,19 @@ const DashboardPage: React.FC = () => {
                                 >
                                     <ArrowLeft size={20} />
                                 </button>
-                                <div className="relative z-10">
+                                <div className="relative z-10 flex-1">
                                     <h1 className="text-3xl font-bold text-white">{selectedBoard?.title}</h1>
                                     {selectedBoard?.description && (
                                         <p className="text-sm text-gray-300 mt-1 max-w-2xl">{selectedBoard.description}</p>
                                     )}
                                 </div>
+                                <button
+                                    onClick={() => openEditBoardModal(selectedBoard!)}
+                                    className="relative z-10 p-2.5 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-all ml-auto hover:bg-white/10"
+                                    title="Configuración"
+                                >
+                                    <Settings size={20} />
+                                </button>
                             </div>
 
                             <DndContext
@@ -811,6 +851,57 @@ const DashboardPage: React.FC = () => {
                                         className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-bold transition-colors shadow-lg shadow-orange-900/20"
                                     >
                                         {editingBoard ? 'Guardar Cambios' : 'Crear Tablero'}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+
+                {/* Profile Modal */}
+                {isProfileModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="w-full max-w-md bg-[#1a1a1c] border border-white/10 rounded-2xl p-6 shadow-2xl"
+                        >
+                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                <UserCog className="text-orange-500" /> Perfil de Usuario
+                            </h2>
+                            <form onSubmit={handleUpdateProfile} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
+                                    <input
+                                        type="text"
+                                        value={userForm.name}
+                                        onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Avatar URL (Opcional)</label>
+                                    <input
+                                        type="text"
+                                        value={userForm.avatar}
+                                        onChange={(e) => setUserForm({ ...userForm, avatar: e.target.value })}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                                        placeholder="https://..."
+                                    />
+                                </div>
+                                <div className="flex justify-end gap-3 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsProfileModalOpen(false)}
+                                        className="px-4 py-2 hover:bg-white/5 rounded-lg text-gray-400 transition-colors"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-bold transition-colors shadow-lg shadow-orange-900/20"
+                                    >
+                                        Guardar Cambios
                                     </button>
                                 </div>
                             </form>
