@@ -90,9 +90,6 @@ const DashboardPage: React.FC = () => {
     const [editCardDescription, setEditCardDescription] = useState('');
 
 
-    useEffect(() => {
-        fetchBoards();
-    }, []);
 
     useEffect(() => {
         if (user) {
@@ -160,7 +157,7 @@ const DashboardPage: React.FC = () => {
             } else {
                 // Create
                 const response = await api.post('/boards', boardForm);
-                setBoards([...boards, response.data]);
+                await fetchBoards();
             }
             setIsBoardModalOpen(false);
         } catch (error) {
@@ -297,6 +294,7 @@ const DashboardPage: React.FC = () => {
                 order: editingCard.order,
                 listId: editingCard.listId
             });
+            fetchBoardDetail(selectedBoard.id);
         } catch (error) {
             console.error('Error updating card:', error);
             fetchBoardDetail(selectedBoard.id);

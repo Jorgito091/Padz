@@ -36,7 +36,12 @@ export const updateCard = async (req: AuthRequest, res: Response) => {
 
         const updatedCard = await prisma.card.update({
             where: { id },
-            data: { title, description, order, listId },
+            data: {
+                title,
+                description,
+                order,
+                listId
+            }
         });
         res.json(updatedCard);
     } catch (error) {

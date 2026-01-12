@@ -20,6 +20,7 @@ app.use('/api/boards', boardRoutes);
 app.use('/api/lists', listRoutes);
 app.use('/api/cards', cardRoutes);
 
+
 app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
@@ -27,3 +28,4 @@ app.get('/health', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
+// restart

@@ -6,7 +6,9 @@ export const getBoards = async (req: AuthRequest, res: Response) => {
     try {
         const boards = await prisma.board.findMany({
             where: { ownerId: req.userId },
-            include: { lists: { include: { cards: true } } },
+            include: {
+                lists: { include: { cards: true } }
+            },
         });
         res.json(boards);
     } catch (error) {
@@ -65,7 +67,12 @@ export const getBoardById = async (req: AuthRequest, res: Response) => {
     try {
         const board = await prisma.board.findUnique({
             where: { id },
-            include: { lists: { include: { cards: true }, orderBy: { order: 'asc' } } },
+            include: {
+                lists: {
+                    include: { cards: true },
+                    orderBy: { order: 'asc' }
+                }
+            },
         });
 
         if (!board) return res.status(404).json({ error: 'Board not found' });
