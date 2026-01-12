@@ -493,6 +493,9 @@ const DashboardPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-end hidden sm:flex">
+                        <span className="text-sm font-semibold text-white">{user?.name}</span>
+                    </div>
                     <button
                         onClick={() => setIsProfileModalOpen(true)}
                         className="group relative"
@@ -511,17 +514,6 @@ const DashboardPage: React.FC = () => {
                                 </div>
                             )}
                         </div>
-                    </button>
-                    <div className="flex flex-col items-end hidden sm:flex">
-                        <span className="text-sm font-semibold text-white">{user?.name}</span>
-                        <span className="text-xs text-gray-400">{user?.email}</span>
-                    </div>
-                    <button
-                        onClick={logout}
-                        className="p-2.5 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-red-400 hover:border-red-500/50 transition-all"
-                        title="Cerrar sesión"
-                    >
-                        <LogOut size={20} />
                     </button>
                 </div>
             </nav>
@@ -902,6 +894,15 @@ const DashboardPage: React.FC = () => {
                                         className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-bold transition-colors shadow-lg shadow-orange-900/20"
                                     >
                                         Guardar Cambios
+                                    </button>
+                                </div>
+                                <div className="border-t border-white/10 pt-4 mt-6">
+                                    <button
+                                        type="button"
+                                        onClick={logout}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white/5 hover:bg-red-500/10 text-gray-400 hover:text-red-400 rounded-lg transition-all border border-transparent hover:border-red-500/20"
+                                    >
+                                        <LogOut size={18} /> Cerrar Sesión
                                     </button>
                                 </div>
                             </form>
