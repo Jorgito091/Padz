@@ -204,6 +204,23 @@ const DashboardPage: React.FC = () => {
         }
     };
 
+    const handleDeleteBoard = async (e: React.MouseEvent, boardId: string, isOwner: boolean) => {
+        e.stopPropagation();
+        const action = isOwner ? 'eliminar' : 'salir de';
+        if (!window.confirm(`¿Estás seguro de que deseas ${action} este tablero?`)) return;
+
+        try {
+            await api.delete(`/boards/${boardId}`);
+            setBoards(boards.filter(b => b.id !== boardId));
+            if (selectedBoard?.id === boardId) {
+                setView('dashboard');
+                setSelectedBoard(null);
+            }
+        } catch (error) {
+            console.error('Error deleting board:', error);
+        }
+    };
+
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -658,8 +675,17 @@ const DashboardPage: React.FC = () => {
                                                 {/* Background Gradient/Color */}
                                                 <div className={`absolute inset-0 bg-gradient-to-br ${board.bgColor || 'from-orange-600/20 to-orange-900/20'} opacity-40 group-hover:opacity-60 transition-all`} />
 
-                                                <div className="relative z-10">
-                                                    <h3 className="text-xl font-bold text-white group-hover:text-white transition-colors uppercase tracking-tight shadow-sm">{board.title}</h3>
+                                                <div className="relative z-10 flex flex-col h-full">
+                                                    <div className="flex justify-between items-start mb-auto">
+                                                        <h3 className="text-xl font-bold text-white group-hover:text-white transition-colors uppercase tracking-tight shadow-sm line-clamp-2 pr-8">{board.title}</h3>
+                                                        <button
+                                                            onClick={(e) => handleDeleteBoard(e, board.id, board.ownerId === user?.id)}
+                                                            className="p-2 hover:bg-black/20 rounded-lg text-white/40 hover:text-white transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
+                                                            title={board.ownerId === user?.id ? "Eliminar tablero" : "Salir del tablero"}
+                                                        >
+                                                            {board.ownerId === user?.id ? <Trash2 size={16} /> : <LogOut size={16} />}
+                                                        </button>
+                                                    </div>
                                                     {board.description && (
                                                         <p className="text-xs text-gray-300 mt-1 line-clamp-2">{board.description}</p>
                                                     )}

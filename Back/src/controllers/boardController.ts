@@ -97,3 +97,38 @@ export const getBoardById = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: 'Error fetching board' });
     }
 };
+
+export const deleteBoard = async (req: AuthRequest, res: Response) => {
+    const { id } = req.params;
+    try {
+        if (!req.userId) return res.status(401).json({ error: 'Unauthorized' });
+
+        const board = await prisma.board.findUnique({
+            where: { id },
+            include: { members: true }
+        });
+
+        if (!board) return res.status(404).json({ error: 'Board not found' });
+
+        if (board.ownerId === req.userId) {
+            // Delete board (Owner)
+            await prisma.board.delete({ where: { id } });
+            return res.json({ message: 'Board deleted successfully', deleted: true });
+        } else {
+            // Leave board (Member)
+            const membership = board.members.find((m: { id: string, userId: string }) => m.userId === req.userId);
+            if (!membership) {
+                return res.status(403).json({ error: 'Access denied' });
+            }
+
+            await prisma.boardMember.delete({
+                where: { id: membership.id }
+            });
+            return res.json({ message: 'Left board successfully', deleted: false });
+        }
+    } catch (error) {
+        console.error('Error deleting/leaving board:', error);
+        res.status(500).json({ error: 'Error processing request' });
+    }
+};
+
