@@ -16,7 +16,13 @@ export const getBoards = async (req: AuthRequest, res: Response) => {
                 owner: { select: { name: true, avatar: true } },
                 members: { include: { user: { select: { id: true, name: true, avatar: true } } } }
             },
+            orderBy: [
+                { isStarred: 'desc' },
+                { order: 'asc' },
+                { createdAt: 'desc' }
+            ]
         });
+        console.log(`[getBoards] User ${req.userId} found ${boards.length} boards`);
         res.json(boards);
     } catch (error) {
         res.status(500).json({ error: 'Error fetching boards' });
@@ -131,4 +137,54 @@ export const deleteBoard = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: 'Error processing request' });
     }
 };
+
+export const toggleStar = async (req: AuthRequest, res: Response) => {
+    const { id } = req.params;
+    try {
+        if (!req.userId) return res.status(401).json({ error: 'Unauthorized' });
+
+        const board = await prisma.board.findUnique({
+            where: { id },
+            include: { members: true }
+        });
+
+        if (!board) return res.status(404).json({ error: 'Board not found' });
+
+        // Access check: must be owner or member
+        const isMember = board.members.some((m: { userId: string }) => m.userId === req.userId);
+        if (board.ownerId !== req.userId && !isMember) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        const updatedBoard = await prisma.board.update({
+            where: { id },
+            data: { isStarred: !board.isStarred }
+        });
+
+        res.json(updatedBoard);
+    } catch (error) {
+        res.status(500).json({ error: 'Error toggling star' });
+    }
+};
+
+export const reorderBoards = async (req: AuthRequest, res: Response) => {
+    const { boardIds } = req.body; // Array of { id: string, order: number }
+    try {
+        if (!req.userId) return res.status(401).json({ error: 'Unauthorized' });
+
+        await Promise.all(
+            boardIds.map((item: { id: string, order: number }) =>
+                prisma.board.update({
+                    where: { id: item.id },
+                    data: { order: item.order }
+                })
+            )
+        );
+
+        res.json({ message: 'Boards reordered successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error reordering boards' });
+    }
+};
+
 

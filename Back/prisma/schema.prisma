@@ -28,6 +28,8 @@ model Board {
   updatedAt   DateTime @updatedAt
   bgColor     String?
   description String?
+  isStarred   Boolean       @default(false)
+  order       Int           @default(0)
   owner       User          @relation(fields: [ownerId], references: [id])
   lists       List[]
   members     BoardMember[]

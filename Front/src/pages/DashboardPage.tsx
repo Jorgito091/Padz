@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, LayoutGrid, ArrowLeft, LogOut, Loader2, X, Send, Trash2, Settings, UserCog } from 'lucide-react';
+import { Plus, LayoutGrid, ArrowLeft, LogOut, Loader2, X, Send, Trash2, Settings, UserCog, Star, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     DndContext,
@@ -18,11 +18,13 @@ import {
     SortableContext,
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
+    rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { useAuth } from '../context/AuthContext';
 import Logo from '../components/Logo';
 import api from '../services/api';
 import { SortableCard } from '../components/SortableCard';
+import { SortableBoard } from '../components/SortableBoard';
 
 // Types
 interface Card {
@@ -73,6 +75,8 @@ interface Board {
         avatar?: string;
     };
     members?: BoardMember[];
+    isStarred?: boolean;
+    order?: number;
 }
 
 const DashboardPage: React.FC = () => {
@@ -87,6 +91,7 @@ const DashboardPage: React.FC = () => {
     const [isBoardModalOpen, setIsBoardModalOpen] = useState(false);
     const [editingBoard, setEditingBoard] = useState<Board | null>(null);
     const [boardForm, setBoardForm] = useState({ title: '', description: '', bgColor: 'from-orange-600 to-orange-500' });
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Profile State
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -218,6 +223,16 @@ const DashboardPage: React.FC = () => {
             }
         } catch (error) {
             console.error('Error deleting board:', error);
+        }
+    };
+
+    const handleToggleStar = async (e: React.MouseEvent, board: Board) => {
+        e.stopPropagation();
+        try {
+            const response = await api.patch(`/boards/${board.id}/star`);
+            setBoards(boards.map(b => b.id === board.id ? { ...b, isStarred: response.data.isStarred } : b));
+        } catch (error) {
+            console.error('Error toggling star:', error);
         }
     };
 
@@ -502,7 +517,34 @@ const DashboardPage: React.FC = () => {
         });
     };
 
+    const handleBoardDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) {
+            setActiveId(null);
+            return;
+        }
+
+        const oldIndex = boards.findIndex((b) => b.id === active.id);
+        const newIndex = boards.findIndex((b) => b.id === over.id);
+
+        const newBoards = arrayMove(boards, oldIndex, newIndex);
+        setBoards(newBoards);
+
+        try {
+            await api.put('/boards/reorder', {
+                boardIds: newBoards.map((b, index) => ({ id: b.id, order: index }))
+            });
+        } catch (error) {
+            console.error('Error reordering boards:', error);
+            fetchBoards();
+        }
+        setActiveId(null);
+    };
+
     const handleDragEnd = async (event: DragEndEvent) => {
+        if (view === 'dashboard') {
+            return handleBoardDragEnd(event);
+        }
         const { active, over } = event;
         const overId = over?.id;
 
@@ -652,59 +694,142 @@ const DashboardPage: React.FC = () => {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
                         >
-                            <div className="flex items-center gap-3 mb-8">
-                                <LayoutGrid className="text-orange-500" />
-                                <h1 className="text-3xl font-bold">Mis Tableros</h1>
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                                <div className="flex items-center gap-3">
+                                    <LayoutGrid className="text-orange-500" />
+                                    <h1 className="text-3xl font-bold text-white tracking-tight">Mis Tableros</h1>
+                                </div>
+                                <div className="relative flex-1 max-w-md">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar tableros..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all"
+                                    />
+                                </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {loading ? (
-                                    [1, 2, 3, 4].map((n) => (
+                            {loading ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                    {[1, 2, 3, 4].map((n) => (
                                         <div key={n} className="h-40 rounded-2xl bg-white/5 border border-white/10 shadow-xl animate-pulse opacity-50" />
-                                    ))
-                                ) : (
-                                    <>
-                                        {boards.map((board) => (
-                                            <motion.div
-                                                key={board.id}
-                                                whileHover={{ scale: 1.02, y: -5 }}
-                                                whileTap={{ scale: 0.98 }}
-                                                onClick={() => handleBoardClick(board)}
-                                                className={`h-40 p-6 backdrop-blur-xl bg-white/5 border border-white/5 hover:border-white/20 rounded-2xl cursor-pointer flex flex-col justify-end shadow-xl transition-all group overflow-hidden relative`}
-                                            >
-                                                {/* Background Gradient/Color */}
-                                                <div className={`absolute inset-0 bg-gradient-to-br ${board.bgColor || 'from-orange-600/20 to-orange-900/20'} opacity-40 group-hover:opacity-60 transition-all`} />
-
-                                                <div className="relative z-10 flex flex-col h-full">
-                                                    <div className="flex justify-between items-start mb-auto">
-                                                        <h3 className="text-xl font-bold text-white group-hover:text-white transition-colors uppercase tracking-tight shadow-sm line-clamp-2 pr-8">{board.title}</h3>
-                                                        <button
-                                                            onClick={(e) => handleDeleteBoard(e, board.id, board.ownerId === user?.id)}
-                                                            className="p-2 hover:bg-black/20 rounded-lg text-white/40 hover:text-white transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
-                                                            title={board.ownerId === user?.id ? "Eliminar tablero" : "Salir del tablero"}
-                                                        >
-                                                            {board.ownerId === user?.id ? <Trash2 size={16} /> : <LogOut size={16} />}
-                                                        </button>
-                                                    </div>
-                                                    {board.description && (
-                                                        <p className="text-xs text-gray-300 mt-1 line-clamp-2">{board.description}</p>
-                                                    )}
-                                                </div>
-                                            </motion.div>
-                                        ))}
-
-                                        <div
-                                            onClick={openCreateBoardModal}
-                                            className="h-40 p-6 rounded-2xl border-2 border-dashed border-white/5 hover:border-orange-500/50 hover:bg-white/5 transition-all cursor-pointer flex flex-col items-center justify-center gap-3 text-gray-400 hover:text-white group"
-                                        >
-                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-orange-500/20 group-hover:text-orange-400 transition-all">
-                                                <Plus />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="space-y-12">
+                                    {/* Starred Boards */}
+                                    {boards.filter(b => b.isStarred && b.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 && (
+                                        <section>
+                                            <div className="flex items-center gap-2 mb-6 text-gray-400">
+                                                <Star size={16} className="fill-orange-500 text-orange-500" />
+                                                <h2 className="text-sm font-bold uppercase tracking-widest">Favoritos</h2>
                                             </div>
-                                            <span className="font-medium">Nuevo Tablero</span>
+                                            <SortableContext items={boards.filter(b => b.isStarred && b.title.toLowerCase().includes(searchTerm.toLowerCase())).map(b => b.id)} strategy={rectSortingStrategy}>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                                    {boards.filter(b => b.isStarred && b.title.toLowerCase().includes(searchTerm.toLowerCase())).map((board) => (
+                                                        <SortableBoard key={board.id} id={board.id}>
+                                                            <motion.div
+                                                                whileHover={{ scale: 1.02, y: -5 }}
+                                                                whileTap={{ scale: 0.98 }}
+                                                                onClick={() => handleBoardClick(board)}
+                                                                className={`h-40 p-6 backdrop-blur-xl bg-white/5 border border-white/5 hover:border-white/20 rounded-2xl cursor-pointer flex flex-col justify-end shadow-xl transition-all group overflow-hidden relative`}
+                                                            >
+                                                                <div className={`absolute inset-0 bg-gradient-to-br ${board.bgColor || 'from-orange-600/20 to-orange-900/20'} opacity-40 group-hover:opacity-60 transition-all`} />
+
+                                                                {/* Star Button */}
+                                                                <button
+                                                                    onClick={(e) => handleToggleStar(e, board)}
+                                                                    className="absolute top-4 left-4 p-2 bg-black/20 hover:bg-black/40 rounded-lg text-orange-500 transition-all z-20"
+                                                                >
+                                                                    <Star size={16} className="fill-current" />
+                                                                </button>
+
+                                                                <div className="relative z-10 flex flex-col h-full">
+                                                                    <div className="flex justify-between items-start mb-auto pl-8">
+                                                                        <h3 className="text-xl font-bold text-white group-hover:text-white transition-colors uppercase tracking-tight shadow-sm line-clamp-2 pr-8">{board.title}</h3>
+                                                                        <button
+                                                                            onClick={(e) => handleDeleteBoard(e, board.id, board.ownerId === user?.id)}
+                                                                            className="p-2 hover:bg-black/20 rounded-lg text-white/40 hover:text-white transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
+                                                                            title={board.ownerId === user?.id ? "Eliminar tablero" : "Salir del tablero"}
+                                                                        >
+                                                                            {board.ownerId === user?.id ? <Trash2 size={16} /> : <LogOut size={16} />}
+                                                                        </button>
+                                                                    </div>
+                                                                    {board.description && (
+                                                                        <p className="text-xs text-gray-300 mt-1 line-clamp-2">{board.description}</p>
+                                                                    )}
+                                                                </div>
+                                                            </motion.div>
+                                                        </SortableBoard>
+                                                    ))}
+                                                </div>
+                                            </SortableContext>
+                                        </section>
+                                    )}
+
+                                    {/* All Boards */}
+                                    <section>
+                                        <div className="flex items-center gap-2 mb-6 text-gray-400">
+                                            <LayoutGrid size={16} />
+                                            <h2 className="text-sm font-bold uppercase tracking-widest">
+                                                {boards.some(b => b.isStarred) ? "Resto de Tableros" : "Todos los Tableros"}
+                                            </h2>
                                         </div>
-                                    </>
-                                )}
-                            </div>
+                                        <SortableContext items={boards.filter(b => !b.isStarred && b.title.toLowerCase().includes(searchTerm.toLowerCase())).map(b => b.id)} strategy={rectSortingStrategy}>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                                {boards.filter(b => !b.isStarred && b.title.toLowerCase().includes(searchTerm.toLowerCase())).map((board) => (
+                                                    <SortableBoard key={board.id} id={board.id}>
+                                                        <motion.div
+                                                            whileHover={{ scale: 1.02, y: -5 }}
+                                                            whileTap={{ scale: 0.98 }}
+                                                            onClick={() => handleBoardClick(board)}
+                                                            className={`h-40 p-6 backdrop-blur-xl bg-white/5 border border-white/5 hover:border-white/20 rounded-2xl cursor-pointer flex flex-col justify-end shadow-xl transition-all group overflow-hidden relative`}
+                                                        >
+                                                            <div className={`absolute inset-0 bg-gradient-to-br ${board.bgColor || 'from-orange-600/20 to-orange-900/20'} opacity-40 group-hover:opacity-60 transition-all`} />
+
+                                                            {/* Star Button */}
+                                                            <button
+                                                                onClick={(e) => handleToggleStar(e, board)}
+                                                                className="absolute top-4 left-4 p-2 bg-black/20 hover:bg-black/40 rounded-lg text-white/40 hover:text-orange-500 transition-all z-20 opacity-0 group-hover:opacity-100"
+                                                            >
+                                                                <Star size={16} />
+                                                            </button>
+
+                                                            <div className="relative z-10 flex flex-col h-full">
+                                                                <div className="flex justify-between items-start mb-auto pl-8">
+                                                                    <h3 className="text-xl font-bold text-white group-hover:text-white transition-colors uppercase tracking-tight shadow-sm line-clamp-2 pr-8">{board.title}</h3>
+                                                                    <button
+                                                                        onClick={(e) => handleDeleteBoard(e, board.id, board.ownerId === user?.id)}
+                                                                        className="p-2 hover:bg-black/20 rounded-lg text-white/40 hover:text-white transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
+                                                                        title={board.ownerId === user?.id ? "Eliminar tablero" : "Salir del tablero"}
+                                                                    >
+                                                                        {board.ownerId === user?.id ? <Trash2 size={16} /> : <LogOut size={16} />}
+                                                                    </button>
+                                                                </div>
+                                                                {board.description && (
+                                                                    <p className="text-xs text-gray-300 mt-1 line-clamp-2">{board.description}</p>
+                                                                )}
+                                                            </div>
+                                                        </motion.div>
+                                                    </SortableBoard>
+                                                ))}
+
+                                                <div
+                                                    onClick={openCreateBoardModal}
+                                                    className="h-40 p-6 rounded-2xl border-2 border-dashed border-white/5 hover:border-orange-500/50 hover:bg-white/5 transition-all cursor-pointer flex flex-col items-center justify-center gap-3 text-gray-400 hover:text-white group"
+                                                >
+                                                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-orange-500/20 group-hover:text-orange-400 transition-all">
+                                                        <Plus />
+                                                    </div>
+                                                    <span className="font-medium">Nuevo Tablero</span>
+                                                </div>
+                                            </div>
+                                        </SortableContext>
+                                    </section>
+                                </div>
+                            )}
                         </motion.div>
                     ) : (
                         <motion.div
