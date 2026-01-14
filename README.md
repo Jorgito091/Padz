@@ -1,71 +1,103 @@
-# Padz - Trello Clone Project
+# Padz - Premium Trello Clone
 
-Un gestor de tareas tipo Trello moderno y elegante, diseñado con un enfoque en estética premium y seguridad robusta.
+Padz es un gestor de tableros moderno, elegante y altamente funcional, diseñado para ofrecer una experiencia de usuario premium con un rendimiento ágil. Inspirado en Trello, pero con una estética de "Glassmorphism" y micro-animaciones que lo hacen sentir vivo.
 
-## 🚀 Estado Actual
-El proyecto ha evolucionado a una aplicación **Full Stack** completa.
-- **Backend:** API robusta con autenticación JWT y validación de propiedad (Ownership).
-- **Frontend:** Interfaz moderna desarrollada con React, utilizando efectos de Glassmorphism y micro-animaciones.
-- **Personalización:** Ahora permite elegir colores de fondo y descripciones para los tableros.
+## ✨ Características Principales
+
+### 📋 Gestión de Tableros
+- **Favoritos (Starring)**: Marca tus tableros más importantes para que aparezcan siempre arriba.
+- **Buscador en Tiempo Real**: Encuentra cualquier tablero al instante por su título.
+- **Drag & Drop Reordering**: Organiza tus tableros y tarjetas simplemente arrastrándolos.
+- **Temas Dinámicos**: Fondos degradados elegantes y modernos.
+
+### 👥 Colaboración y Seguridad
+- **Sistema de Miembros**: Invita a otros usuarios a tus tableros compartiendo su email.
+- **Roles Claros**: Diferenciación entre Propietario (Owner) y Miembro (Member).
+- **Acceso Protegido**: Autenticación robusta con JWT y control de acceso por recurso.
+
+### 💬 Comunicación
+- **Comentarios en Tarjetas**: Discusiones integradas en cada tarea para mantener el flujo de trabajo en un solo lugar.
+- **Avatares Personalizados**: Identificación visual rápida de los miembros y tu propio perfil.
+
+---
 
 ## 🛠️ Stack Tecnológico
 
-### Backend
-- **Lenguaje:** TypeScript
-- **Framework:** Express.js
-- **Seguridad:** JWT (JSON Web Tokens) & Bcrypt para hashing de contraseñas.
-- **Base de Datos:** SQLite (Local)
-- **ORM:** Prisma 7 (con Driver Adapters)
-- **Entorno:** Node.js
+### Backend (Node.js)
+- **TypeScript**: Para un desarrollo robusto y tipado.
+- **Express.js**: Framework ágil para la API REST.
+- **Prisma 7**: ORM de última generación para la gestión de datos.
+- **SQLite**: Base de datos local rápida y sin configuración externa.
+- **JWT & Bcrypt**: Estándares de seguridad para autenticación y cifrado.
 
-### Frontend
-- **Framework:** React 18 + Vite
-- **Lenguaje:** TypeScript
-- **Estilos:** Tailwind CSS
-- **Animaciones:** Framer Motion
-- **Iconos:** Lucide React
-
-## 📂 Estructura del Proyecto
-- 📁 `/Back`: Servidor API, lógica de negocio y seguridad.
-- 📁 `/Front`: Aplicación cliente React con diseño moderno.
-- 📁 `/Back/prisma`: Esquema de base de datos y configuración del ORM.
-
-## 🔐 Seguridad y Autenticación
-El sistema utiliza un flujo de autenticación basado en **Tokens JWT**:
-1. Los usuarios se registran/inician sesión para obtener un token.
-2. Todas las rutas de Tableros, Listas y Tarjetas están protegidas por el middleware de autenticación.
-3. Se aplica un control de **Propiedad (Ownership)**: los usuarios solo pueden ver y modificar recursos (tableros, listas, tarjetas) de los cuales son dueños.
-
-## 📋 API Endpoints Principales
-
-### Autenticación
-- `POST /api/auth/register`: Registro de nuevos usuarios.
-- `POST /api/auth/login`: Inicio de sesión y obtención de token.
-
-### Gestión (Requieren Token Bearer)
-- `GET /api/boards`: Obtiene los tableros del usuario autenticado.
-- `POST /api/boards`: Crea un nuevo tablero.
-- `PUT /api/boards/:id`: Actualiza un tablero (título, descripción, color).
-- `GET /api/boards/:id`: Detalle completo de un tablero (listas y tarjetas).
-- `GET /api/lists?boardId=ID`: Listas de un tablero específico.
-- `POST /api/cards`: Crea una tarjeta en una lista.
-
-## 🛠️ Cómo empezar
-
-El proyecto tiene dos carpetas principales que deben ejecutarse por separado.
-
-### 1. Backend (API)
-Asegúrate de tener instalado Node.js y SQLite.
-1. `cd Back`
-2. `npm install`
-3. `npx prisma db push` (Si es la primera vez o cambiaste el esquema)
-4. `npm run dev` (El servidor correrá en `http://localhost:3001` por defecto gracias al .env)
-
-### 2. Frontend (React)
-1. Abrir **otra terminal** (sin cerrar la del backend).
-2. `cd Front`
-3. `npm install`
-4. `npm run dev` (La aplicación correrá en `http://localhost:3000` por defecto, o la que indique Vite)
+### Frontend (React)
+- **Vite 6**: El bundle tool más rápido para desarrollo moderno.
+- **Tailwind CSS**: Diseño moderno basado en utilidades.
+- **Framer Motion**: Micro-animaciones y transiciones suaves.
+- **dnd-kit**: Motor potente y accesible para el Drag & Drop.
+- **Lucide Icons**: Set de iconos elegantes y consistentes.
 
 ---
-*Nota: He actualizado el frontend a **Vite 6** para asegurar compatibilidad con React 18 y ofrecer un desarrollo más rápido.*
+
+## 🚀 Guía de Instalación
+
+### 1. Backend (API)
+```bash
+cd Back
+npm install
+npx prisma db push
+npm run dev
+```
+
+### 2. Frontend (React)
+```bash
+cd Front
+npm install
+npm run dev
+```
+
+---
+
+## 🧠 Arquitectura Técnica y Funcionamiento
+
+Para continuar el desarrollo, es fundamental entender cómo fluyen los datos en la aplicación:
+
+### ⚙️ Flujo del Backend (Request Lifecycle)
+
+1.  **Definición de Rutas (`src/routes`)**:
+    Los archivos en `routes/` (ej. `boardRoutes.ts`) definen los endpoints. Casi todas las rutas están protegidas por `authenticate`.
+2.  **Middleware de Seguridad (`src/middleware/authMiddleware.ts`)**:
+    - El middleware `authenticate` verifica el JWT del header `Authorization`.
+    - Si es válido, inyecta el `userId` en el objeto de la petición (`req.userId`), transformándola en una `AuthRequest`.
+3.  **Controladores (`src/controllers`)**:
+    - Residen en `src/controllers/`. Son los encargados de la lógica de negocio.
+    - **Conexión**: Reciben el `req` (con el `userId`) y usan el cliente de **Prisma** (`src/prisma.ts`) para consultar la DB.
+    - **Validación**: Siempre verifican si el `userId` es el `ownerId` del recurso o si pertenece a la lista de `members` antes de permitir ediciones o eliminaciones.
+4.  **Base de Datos (`prisma/schema.prisma`)**:
+    Define los modelos (`Board`, `List`, `Card`, `Member`, `Comment`). Para cualquier cambio en los datos, se debe modificar este archivo y ejecutar `npx prisma db push`.
+
+### 💻 Flujo del Frontend
+
+1.  **Servicios de API (`src/services/api.ts`)**:
+    Centraliza las peticiones usando **Axios**. Automáticamente adjunta el token JWT desde el `localStorage` en cada petición.
+2.  **Gestión de Estado (`src/context/AuthContext.tsx`)**:
+    Maneja el estado global del usuario autenticado y su perfil (incluyendo el avatar).
+3.  **Componentes y Páginas**:
+    - Las páginas (`src/pages/DashboardPage.tsx`) consumen los servicios para cargar datos.
+    - Se utilizan componentes especializados como `SortableBoard` o `SortableCard` para manejar la interactividad compleja sin sobrecargar el código de la página.
+
+---
+
+## 👩‍💻 Guía para Continuar el Desarrollo
+
+1.  **Añadir una nueva funcionalidad**:
+    - Define el modelo en `schema.prisma`.
+    - Crea el controlador en `src/controllers/`.
+    - Registra la ruta en `src/routes/` y asóciala al controlador.
+    - Crea el servicio y la UI en el `Front/`.
+2.  **Mantenimiento**:
+    - El proyecto usa TypeScript estricto; asegúrate de tipar correctamente todas las respuestas de la API.
+    - El diseño premium se mantiene usando clases de Tailwind específicas definidas en los componentes.
+
+---
+*Desarrollado con ❤️ para ser el gestor de tareas más bonito del vecindario.*
