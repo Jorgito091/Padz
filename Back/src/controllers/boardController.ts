@@ -5,9 +5,16 @@ import prisma from '../prisma';
 export const getBoards = async (req: AuthRequest, res: Response) => {
     try {
         const boards = await prisma.board.findMany({
-            where: { ownerId: req.userId },
+            where: {
+                OR: [
+                    { ownerId: req.userId },
+                    { members: { some: { userId: req.userId } } }
+                ]
+            },
             include: {
-                lists: { include: { cards: true } }
+                lists: { include: { cards: true } },
+                owner: { select: { name: true, avatar: true } },
+                members: { include: { user: { select: { id: true, name: true, avatar: true } } } }
             },
         });
         res.json(boards);
@@ -71,14 +78,17 @@ export const getBoardById = async (req: AuthRequest, res: Response) => {
                 lists: {
                     include: { cards: true },
                     orderBy: { order: 'asc' }
-                }
+                },
+                owner: { select: { name: true, avatar: true } },
+                members: { include: { user: { select: { id: true, name: true, avatar: true } } } }
             },
         });
 
         if (!board) return res.status(404).json({ error: 'Board not found' });
 
-        // Ownership check
-        if (board.ownerId !== req.userId) {
+        // Ownership or membership check
+        const isMember = board.members.some((m: any) => m.userId === req.userId);
+        if (board.ownerId !== req.userId && !isMember) {
             return res.status(403).json({ error: 'Access denied' });
         }
 

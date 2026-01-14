@@ -31,12 +31,34 @@ interface Card {
     description?: string;
     order: number;
     listId: string;
+    comments?: CommentData[];
+}
+interface CommentData {
+    id: string;
+    text: string;
+    createdAt: string;
+    user: {
+        id: string;
+        name: string;
+        avatar?: string;
+    };
 }
 interface List {
     id: string;
     title: string;
     order: number;
     cards: Card[];
+}
+interface BoardMember {
+    id: string;
+    role: string;
+    userId: string;
+    user: {
+        id: string;
+        name: string;
+        avatar?: string;
+        email?: string;
+    };
 }
 interface Board {
     id: string;
@@ -45,6 +67,12 @@ interface Board {
     bgImage?: string;
     bgColor?: string;
     lists?: List[];
+    ownerId: string;
+    owner?: {
+        name: string;
+        avatar?: string;
+    };
+    members?: BoardMember[];
 }
 
 const DashboardPage: React.FC = () => {
@@ -70,6 +98,11 @@ const DashboardPage: React.FC = () => {
     const [activeListId, setActiveListId] = useState<string | null>(null);
     const [newCardTitle, setNewCardTitle] = useState('');
 
+    // Member Management State
+    const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [isInviting, setIsInviting] = useState(false);
+
     // DND State
     const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -88,6 +121,11 @@ const DashboardPage: React.FC = () => {
     const [editingCard, setEditingCard] = useState<Card | null>(null);
     const [editCardTitle, setEditCardTitle] = useState('');
     const [editCardDescription, setEditCardDescription] = useState('');
+
+    // Comments State
+    const [cardComments, setCardComments] = useState<CommentData[]>([]);
+    const [newCommentText, setNewCommentText] = useState('');
+    const [isPostingComment, setIsPostingComment] = useState(false);
 
 
 
@@ -245,6 +283,37 @@ const DashboardPage: React.FC = () => {
         }
     };
 
+    const handleInviteMember = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!inviteEmail.trim() || !selectedBoard) return;
+
+        setIsInviting(true);
+        try {
+            await api.post('/members', {
+                boardId: selectedBoard.id,
+                email: inviteEmail,
+                role: 'MEMBER'
+            });
+            // Refetch board detail to show new member
+            await fetchBoardDetail(selectedBoard.id);
+            setInviteEmail('');
+        } catch (error: any) {
+            alert(error.response?.data?.error || 'Error al invitar miembro');
+        } finally {
+            setIsInviting(false);
+        }
+    };
+
+    const handleRemoveMember = async (memberUserId: string) => {
+        if (!selectedBoard) return;
+        try {
+            await api.delete(`/members/${selectedBoard.id}/${memberUserId}`);
+            await fetchBoardDetail(selectedBoard.id);
+        } catch (error) {
+            console.error('Error removing member:', error);
+        }
+    };
+
     const handleDeleteList = async (listId: string) => {
         if (!selectedBoard) return;
 
@@ -260,10 +329,50 @@ const DashboardPage: React.FC = () => {
         }
     };
 
+    const fetchComments = async (cardId: string) => {
+        try {
+            const response = await api.get(`/comments/${cardId}`);
+            setCardComments(response.data);
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+        }
+    };
+
+    const handlePostComment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newCommentText.trim() || !editingCard) return;
+
+        setIsPostingComment(true);
+        try {
+            const response = await api.post('/comments', {
+                cardId: editingCard.id,
+                text: newCommentText
+            });
+            setCardComments([response.data, ...cardComments]);
+            setNewCommentText('');
+        } catch (error) {
+            console.error('Error posting comment:', error);
+        } finally {
+            setIsPostingComment(true);
+            setIsPostingComment(false);
+        }
+    };
+
+    const handleDeleteComment = async (commentId: string) => {
+        try {
+            await api.delete(`/comments/${commentId}`);
+            setCardComments(cardComments.filter(c => c.id !== commentId));
+        } catch (error) {
+            console.error('Error deleting comment:', error);
+        }
+    };
+
     const openEditModal = (card: Card) => {
         setEditingCard(card);
         setEditCardTitle(card.title);
         setEditCardDescription(card.description || '');
+        setCardComments([]);
+        fetchComments(card.id);
     };
 
     const handleUpdateCard = async (e: React.FormEvent) => {
@@ -579,16 +688,46 @@ const DashboardPage: React.FC = () => {
                         >
                             {/* Board Header */}
                             <div className="flex items-center gap-4 mb-8 backdrop-blur-md bg-white/5 p-6 rounded-2xl border border-white/10 relative overflow-hidden">
-                                <div className={`absolute inset-0 bg-gradient-to-r ${selectedBoard?.bgColor || 'from-orange-600/20 to-orange-900/20'} opacity-20`} />
-
                                 <button
                                     onClick={() => setView('dashboard')}
                                     className="relative z-10 p-2.5 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-all"
                                 >
                                     <ArrowLeft size={20} />
                                 </button>
+
                                 <div className="relative z-10 flex-1">
-                                    <h1 className="text-3xl font-bold text-white">{selectedBoard?.title}</h1>
+                                    <div className="flex items-center gap-4">
+                                        <h1 className="text-3xl font-bold text-white">{selectedBoard?.title}</h1>
+
+                                        {/* Board Members Avatars */}
+                                        <div className="flex -space-x-2 ml-4">
+                                            {/* Owner */}
+                                            <div className="w-8 h-8 rounded-full border-2 border-[#1a1a1c] overflow-hidden bg-orange-600 flex items-center justify-center text-[10px] font-bold shadow-lg" title={`Dueño: ${selectedBoard?.owner?.name}`}>
+                                                {selectedBoard?.owner?.avatar ? (
+                                                    <img src={selectedBoard.owner.avatar} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span>{selectedBoard?.owner?.name.charAt(0).toUpperCase()}</span>
+                                                )}
+                                            </div>
+                                            {/* Members */}
+                                            {selectedBoard?.members?.map(m => (
+                                                <div key={m.id} className="w-8 h-8 rounded-full border-2 border-[#1a1a1c] overflow-hidden bg-zinc-700 flex items-center justify-center text-[10px] font-bold shadow-lg" title={m.user.name}>
+                                                    {m.user.avatar ? (
+                                                        <img src={m.user.avatar} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <span>{m.user.name.charAt(0).toUpperCase()}</span>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            <button
+                                                onClick={() => setIsMembersModalOpen(true)}
+                                                className="w-8 h-8 rounded-full border-2 border-[#1a1a1c] bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors shadow-lg"
+                                                title="Invitar miembros"
+                                            >
+                                                <Plus size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
                                     {selectedBoard?.description && (
                                         <p className="text-sm text-gray-300 mt-1 max-w-2xl">{selectedBoard.description}</p>
                                     )}
@@ -744,26 +883,86 @@ const DashboardPage: React.FC = () => {
                             className="w-full max-w-md bg-[#1a1a1c] border border-white/10 rounded-2xl p-6 shadow-2xl"
                         >
                             <h2 className="text-xl font-bold mb-4">Editar Tarjeta</h2>
-                            <form onSubmit={handleUpdateCard} className="space-y-4">
+                            <form onSubmit={handleUpdateCard} className="space-y-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Título</label>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2 font-semibold uppercase tracking-wider">Título de la Tarjeta</label>
                                     <input
                                         type="text"
                                         value={editCardTitle}
                                         onChange={(e) => setEditCardTitle(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                                        autoFocus
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50 transition-all font-medium"
+                                        placeholder="Título de la tarjeta"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Descripción</label>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2 font-semibold uppercase tracking-wider">Descripción</label>
                                     <textarea
                                         value={editCardDescription}
                                         onChange={(e) => setEditCardDescription(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50 h-32 resize-none"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50 h-32 resize-none transition-all"
+                                        placeholder="Añade una descripción más detallada..."
                                     />
                                 </div>
-                                <div className="flex justify-end gap-3 pt-2">
+
+                                {/* Seccion de Comentarios */}
+                                <div className="border-t border-white/10 pt-6">
+                                    <h3 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider">Comentarios</h3>
+
+                                    <div className="flex gap-2 mb-6">
+                                        <div className="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-xs font-bold border border-white/10 flex-shrink-0">
+                                            {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover rounded-full" /> : user?.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="flex-1 flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={newCommentText}
+                                                onChange={(e) => setNewCommentText(e.target.value)}
+                                                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                                                placeholder="Escribe un comentario..."
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={handlePostComment}
+                                                disabled={isPostingComment || !newCommentText.trim()}
+                                                className="p-1.5 bg-orange-600 hover:bg-orange-500 rounded-lg text-white disabled:opacity-50 transition-colors"
+                                            >
+                                                <Send size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                                        {cardComments.map((comment) => (
+                                            <div key={comment.id} className="flex gap-3 group">
+                                                <div className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-xs font-bold border border-white/10 flex-shrink-0">
+                                                    {comment.user.avatar ? <img src={comment.user.avatar} className="w-full h-full object-cover rounded-full" /> : comment.user.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="text-sm font-bold text-white">{comment.user.name}</span>
+                                                        <span className="text-[10px] text-gray-500">{new Date(comment.createdAt).toLocaleString()}</span>
+                                                        {(comment.user.id === user?.id || selectedBoard?.ownerId === user?.id) && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleDeleteComment(comment.id)}
+                                                                className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-all"
+                                                            >
+                                                                <Trash2 size={12} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm text-gray-300 bg-white/5 p-3 rounded-xl border border-white/5 break-words">
+                                                        {comment.text}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {cardComments.length === 0 && (
+                                            <p className="text-center text-sm text-gray-500 italic py-4">Sin comentarios todavía.</p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="flex justify-end gap-3 pt-6 border-t border-white/10">
                                     <button
                                         type="button"
                                         onClick={() => setEditingCard(null)}
@@ -907,6 +1106,102 @@ const DashboardPage: React.FC = () => {
                         </motion.div>
                     </div>
                 )}
+
+                {/* Members Modal */}
+                <AnimatePresence>
+                    {isMembersModalOpen && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setIsMembersModalOpen(false)}
+                                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                            />
+                            <motion.div
+                                initial={{ scale: 0.95, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.95, opacity: 0 }}
+                                className="relative w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl p-6"
+                            >
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-xl font-bold">Miembros del Tablero</h2>
+                                    <button onClick={() => setIsMembersModalOpen(false)} className="text-gray-400 hover:text-white">
+                                        <X size={20} />
+                                    </button>
+                                </div>
+
+                                <form onSubmit={handleInviteMember} className="mb-8 relative z-10">
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Invitar por correo</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="email"
+                                            placeholder="correo@ejemplo.com"
+                                            value={inviteEmail}
+                                            onChange={(e) => setInviteEmail(e.target.value)}
+                                            className="flex-1 bg-black/40 border border-white/10 rounded-lg px-4 py-2 outline-none focus:border-orange-500 transition-all text-white"
+                                            required
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={isInviting}
+                                            className="bg-orange-600 hover:bg-orange-500 disabled:opacity-50 px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2"
+                                        >
+                                            {isInviting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                                            Invitar
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Lista de Miembros</h3>
+
+                                    {/* Owner */}
+                                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-full bg-orange-600 flex items-center justify-center font-bold overflow-hidden shadow-inner">
+                                                {selectedBoard?.owner?.avatar ? <img src={selectedBoard.owner.avatar} className="w-full h-full object-cover" /> : selectedBoard?.owner?.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-white">{selectedBoard?.owner?.name}</div>
+                                                <div className="text-xs text-orange-500 flex items-center gap-1 font-semibold uppercase tracking-tighter">Dueño</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Members */}
+                                    <div className="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                                        {selectedBoard?.members?.map(m => (
+                                            <div key={m.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 group">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-9 h-9 rounded-full bg-zinc-700 flex items-center justify-center font-bold overflow-hidden shadow-inner text-sm">
+                                                        {m.user.avatar ? <img src={m.user.avatar} className="w-full h-full object-cover" /> : m.user.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-medium text-white text-sm">{m.user.name}</div>
+                                                        <div className="text-[10px] text-gray-400 truncate max-w-[150px]">{m.user.email}</div>
+                                                    </div>
+                                                </div>
+                                                {(selectedBoard?.ownerId === user?.id || m.userId === user?.id) && (
+                                                    <button
+                                                        onClick={() => handleRemoveMember(m.userId)}
+                                                        className="p-2 hover:bg-red-500/10 rounded-lg text-gray-500 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"
+                                                        title="Eliminar miembro"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        {(!selectedBoard?.members || selectedBoard.members.length === 0) && (
+                                            <div className="text-center py-4 text-sm text-gray-500 italic">No hay otros miembros aún</div>
+                                        )}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
             </main>
         </div>
     );
