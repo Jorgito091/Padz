@@ -132,6 +132,7 @@ const DashboardPage: React.FC = () => {
     useEffect(() => {
         if (user) {
             setUserForm({ name: user.name, avatar: user.avatar || '' });
+            fetchBoards();
         }
     }, [user]);
 

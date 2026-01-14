@@ -31,7 +31,7 @@ export const register = async (req: Request, res: Response) => {
 
         const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
-        res.status(201).json({ user: { id: user.id, email: user.email, name: user.name }, token });
+        res.status(201).json({ user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar }, token });
     } catch (error) {
         console.error('Error during registration:', error);
         res.status(500).json({ error: 'Error creating user' });
@@ -54,7 +54,7 @@ export const login = async (req: Request, res: Response) => {
 
         const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
-        res.json({ user: { id: user.id, email: user.email, name: user.name }, token });
+        res.json({ user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar }, token });
     } catch (error) {
         res.status(500).json({ error: 'Error logging in' });
     }
