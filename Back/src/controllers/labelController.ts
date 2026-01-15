@@ -18,11 +18,14 @@ export const createLabel = async (req: AuthRequest, res: Response) => {
     const { name, color, boardId } = req.body;
     try {
         const board = await prisma.board.findUnique({
-            where: { id: boardId }
+            where: { id: boardId },
+            include: { members: true }
         });
 
         if (!board) return res.status(404).json({ error: 'Board not found' });
-        if (board.ownerId !== req.userId) return res.status(403).json({ error: 'Access denied' });
+
+        const isMember = board.members.some((m: any) => m.userId === req.userId);
+        if (board.ownerId !== req.userId && !isMember) return res.status(403).json({ error: 'Access denied' });
 
         const label = await prisma.label.create({
             data: { name, color, boardId },
@@ -38,11 +41,13 @@ export const deleteLabel = async (req: AuthRequest, res: Response) => {
     try {
         const label = await prisma.label.findUnique({
             where: { id },
-            include: { board: true }
+            include: { board: { include: { members: true } } }
         });
 
         if (!label) return res.status(404).json({ error: 'Label not found' });
-        if (label.board.ownerId !== req.userId) return res.status(403).json({ error: 'Access denied' });
+
+        const isMember = label.board.members.some((m: any) => m.userId === req.userId);
+        if (label.board.ownerId !== req.userId && !isMember) return res.status(403).json({ error: 'Access denied' });
 
         await prisma.label.delete({ where: { id } });
         res.status(204).send();
@@ -56,11 +61,12 @@ export const addLabelToCard = async (req: AuthRequest, res: Response) => {
     try {
         const card = await prisma.card.findUnique({
             where: { id: cardId },
-            include: { list: { include: { board: true } } }
+            include: { list: { include: { board: { include: { members: true } } } } }
         });
 
         if (!card) return res.status(404).json({ error: 'Card not found' });
-        if (card.list.board.ownerId !== req.userId) return res.status(403).json({ error: 'Access denied' });
+        const isMember = card.list.board.members.some((m: any) => m.userId === req.userId);
+        if (card.list.board.ownerId !== req.userId && !isMember) return res.status(403).json({ error: 'Access denied' });
 
         const cardLabel = await prisma.cardLabel.create({
             data: { cardId, labelId }
@@ -76,11 +82,12 @@ export const removeLabelFromCard = async (req: AuthRequest, res: Response) => {
     try {
         const card = await prisma.card.findUnique({
             where: { id: cardId },
-            include: { list: { include: { board: true } } }
+            include: { list: { include: { board: { include: { members: true } } } } }
         });
 
         if (!card) return res.status(404).json({ error: 'Card not found' });
-        if (card.list.board.ownerId !== req.userId) return res.status(403).json({ error: 'Access denied' });
+        const isMember = card.list.board.members.some((m: any) => m.userId === req.userId);
+        if (card.list.board.ownerId !== req.userId && !isMember) return res.status(403).json({ error: 'Access denied' });
 
         await prisma.cardLabel.delete({
             where: {
