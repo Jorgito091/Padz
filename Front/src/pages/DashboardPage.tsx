@@ -34,6 +34,15 @@ interface Card {
     order: number;
     listId: string;
     comments?: CommentData[];
+    labels?: {
+        label: LabelData;
+    }[];
+}
+interface LabelData {
+    id: string;
+    name: string;
+    color: string;
+    boardId: string;
 }
 interface CommentData {
     id: string;
@@ -75,6 +84,7 @@ interface Board {
         avatar?: string;
     };
     members?: BoardMember[];
+    labels?: LabelData[];
     isStarred?: boolean;
     order?: number;
 }
@@ -131,6 +141,11 @@ const DashboardPage: React.FC = () => {
     const [cardComments, setCardComments] = useState<CommentData[]>([]);
     const [newCommentText, setNewCommentText] = useState('');
     const [isPostingComment, setIsPostingComment] = useState(false);
+
+    // Labels Creation State
+    const [isLabelPickerOpen, setIsLabelPickerOpen] = useState(false);
+    const [newLabelForm, setNewLabelForm] = useState({ name: '', color: '#f97316' }); // default orange
+    const [isCreatingLabel, setIsCreatingLabel] = useState(false);
 
 
 
@@ -406,6 +421,100 @@ const DashboardPage: React.FC = () => {
         setEditCardDescription(card.description || '');
         setCardComments([]);
         fetchComments(card.id);
+        setIsLabelPickerOpen(false);
+    };
+
+    const handleCreateLabel = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newLabelForm.name.trim() || !selectedBoard) return;
+
+        setIsCreatingLabel(true);
+        try {
+            const response = await api.post('/labels', {
+                ...newLabelForm,
+                boardId: selectedBoard.id
+            });
+            setSelectedBoard({
+                ...selectedBoard,
+                labels: [...(selectedBoard.labels || []), response.data]
+            });
+            setNewLabelForm({ name: '', color: '#f97316' });
+        } catch (error) {
+            console.error('Error creating label:', error);
+        } finally {
+            setIsCreatingLabel(false);
+        }
+    };
+
+    const handleAssignLabel = async (labelId: string) => {
+        if (!editingCard || !selectedBoard) return;
+
+        // Skip if already assigned
+        if (editingCard.labels?.some(l => l.label.id === labelId)) {
+            // Unassign instead
+            handleUnassignLabel(labelId);
+            return;
+        }
+
+        try {
+            await api.post('/labels/assign', {
+                cardId: editingCard.id,
+                labelId
+            });
+
+            // Refresh board to get updated card labels
+            fetchBoardDetail(selectedBoard.id);
+
+            // Local update of editingCard if possible (or just trust fetchBoardDetail)
+            const labelData = selectedBoard.labels?.find(l => l.id === labelId);
+            if (labelData) {
+                setEditingCard({
+                    ...editingCard,
+                    labels: [...(editingCard.labels || []), { label: labelData }]
+                });
+            }
+        } catch (error) {
+            console.error('Error assigning label:', error);
+        }
+    };
+
+    const handleUnassignLabel = async (labelId: string) => {
+        if (!editingCard || !selectedBoard) return;
+
+        try {
+            await api.delete(`/labels/unassign/${editingCard.id}/${labelId}`);
+
+            // Refresh
+            fetchBoardDetail(selectedBoard.id);
+
+            setEditingCard({
+                ...editingCard,
+                labels: editingCard.labels?.filter(l => l.label.id !== labelId)
+            });
+        } catch (error) {
+            console.error('Error unassigning label:', error);
+        }
+    };
+
+    const handleDeleteLabelData = async (e: React.MouseEvent, labelId: string) => {
+        e.stopPropagation();
+        if (!selectedBoard || !window.confirm('¿Eliminar esta etiqueta de todo el tablero?')) return;
+
+        try {
+            await api.delete(`/labels/${labelId}`);
+            setSelectedBoard({
+                ...selectedBoard,
+                labels: selectedBoard.labels?.filter(l => l.id !== labelId)
+            });
+            if (editingCard) {
+                setEditingCard({
+                    ...editingCard,
+                    labels: editingCard.labels?.filter(l => l.label.id !== labelId)
+                });
+            }
+        } catch (error) {
+            console.error('Error deleting label:', error);
+        }
     };
 
     const handleUpdateCard = async (e: React.FormEvent) => {
@@ -937,6 +1046,7 @@ const DashboardPage: React.FC = () => {
                                                                     description={card.description}
                                                                     onEdit={() => openEditModal(card)}
                                                                     onDelete={() => handleDeleteCard(card.id, list.id)}
+                                                                    labels={card.labels}
                                                                 />
                                                             ))}
                                                         </div>
@@ -1046,6 +1156,97 @@ const DashboardPage: React.FC = () => {
                                         placeholder="Título de la tarjeta"
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2 font-semibold uppercase tracking-wider">Etiquetas</label>
+                                    <div className="flex flex-wrap gap-2 mb-3">
+                                        {editingCard.labels?.map((l) => (
+                                            <div
+                                                key={l.label.id}
+                                                className="px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 group/btn"
+                                                style={{ backgroundColor: `${l.label.color}33`, border: `1px solid ${l.label.color}66`, color: l.label.color }}
+                                            >
+                                                {l.label.name}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleUnassignLabel(l.label.id)}
+                                                    className="hover:text-white transition-colors"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsLabelPickerOpen(!isLabelPickerOpen)}
+                                            className="w-8 h-8 rounded-full bg-white/5 border border-dashed border-white/20 flex items-center justify-center text-gray-400 hover:text-white hover:border-orange-500/50 transition-all"
+                                        >
+                                            <Plus size={16} />
+                                        </button>
+                                    </div>
+
+                                    <AnimatePresence>
+                                        {isLabelPickerOpen && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: -10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -10 }}
+                                                className="bg-zinc-900 border border-white/10 rounded-xl p-4 mb-4 shadow-xl"
+                                            >
+                                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Seleccionar Etiqueta</h4>
+                                                <div className="space-y-2 mb-4 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                                                    {selectedBoard?.labels?.map(label => {
+                                                        const isAssigned = editingCard.labels?.some(l => l.label.id === label.id);
+                                                        return (
+                                                            <div
+                                                                key={label.id}
+                                                                onClick={() => handleAssignLabel(label.id)}
+                                                                className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all ${isAssigned ? 'bg-orange-500/10 border border-orange-500/30' : 'hover:bg-white/5'}`}
+                                                            >
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: label.color }} />
+                                                                    <span className="text-sm font-medium">{label.name}</span>
+                                                                </div>
+                                                                <button
+                                                                    onClick={(e) => handleDeleteLabelData(e, label.id)}
+                                                                    className="p-1 text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                                                                >
+                                                                    <Trash2 size={12} />
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                <div className="border-t border-white/5 pt-4">
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            type="text"
+                                                            value={newLabelForm.name}
+                                                            onChange={(e) => setNewLabelForm({ ...newLabelForm, name: e.target.value })}
+                                                            placeholder="Nueva etiqueta..."
+                                                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                                                        />
+                                                        <input
+                                                            type="color"
+                                                            value={newLabelForm.color}
+                                                            onChange={(e) => setNewLabelForm({ ...newLabelForm, color: e.target.value })}
+                                                            className="w-8 h-8 rounded p-0 border-none bg-transparent cursor-pointer"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleCreateLabel}
+                                                            disabled={isCreatingLabel || !newLabelForm.name.trim()}
+                                                            className="p-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-white disabled:opacity-50"
+                                                        >
+                                                            <Plus size={16} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-2 font-semibold uppercase tracking-wider">Descripción</label>
                                     <textarea

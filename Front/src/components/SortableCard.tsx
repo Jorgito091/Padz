@@ -11,9 +11,10 @@ interface CardProps {
     onClick?: () => void;
     onEdit?: () => void;
     onDelete?: () => void;
+    labels?: { label: { color: string, name: string } }[];
 }
 
-export const SortableCard: React.FC<CardProps> = ({ id, title, description, onClick, onEdit, onDelete }) => {
+export const SortableCard: React.FC<CardProps> = ({ id, title, description, onClick, onEdit, onDelete, labels }) => {
     const {
         attributes,
         listeners,
@@ -39,6 +40,18 @@ export const SortableCard: React.FC<CardProps> = ({ id, title, description, onCl
             >
                 <div className="flex justify-between items-start gap-2">
                     <div className="flex-1">
+                        {labels && labels.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mb-2">
+                                {labels.map((l, i) => (
+                                    <div
+                                        key={i}
+                                        title={l.label.name}
+                                        className="h-1.5 w-8 rounded-full shadow-sm"
+                                        style={{ backgroundColor: l.label.color }}
+                                    />
+                                ))}
+                            </div>
+                        )}
                         <div className="font-medium text-white">{title}</div>
                         {description && (
                             <div className="text-xs text-gray-500 mt-2 line-clamp-2">{description}</div>

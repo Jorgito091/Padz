@@ -33,6 +33,7 @@ model Board {
   owner       User          @relation(fields: [ownerId], references: [id])
   lists       List[]
   members     BoardMember[]
+  labels      Label[]
 }
 
 model List {
@@ -56,7 +57,29 @@ model Card {
   updatedAt   DateTime @updatedAt
   list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
   comments    Comment[]
+  labels      CardLabel[]
 }
+
+model Label {
+  id      String @id @default(uuid())
+  name    String
+  color   String // hex or class
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards   CardLabel[]
+  
+  @@unique([name, boardId])
+}
+
+model CardLabel {
+  cardId  String
+  labelId String
+  card    Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  label   Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([cardId, labelId])
+}
+
 model BoardMember {
   id      String @id @default(uuid())
   role    String @default("MEMBER") // OWNER, MEMBER, VIEWER

@@ -3,6 +3,7 @@ import { AuthRequest } from '../middleware/authMiddleware';
 import prisma from '../prisma';
 
 export const getBoards = async (req: AuthRequest, res: Response) => {
+    console.log(`[getBoards] User: ${req.userId}`);
     try {
         const boards = await prisma.board.findMany({
             where: {
@@ -77,14 +78,27 @@ export const updateBoard = async (req: AuthRequest, res: Response) => {
 
 export const getBoardById = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
+    console.log(`[getBoardById] Fetching board: ${id} for user: ${req.userId}`);
     try {
         const board = await prisma.board.findUnique({
             where: { id },
             include: {
                 lists: {
-                    include: { cards: true },
+                    include: {
+                        cards: {
+                            include: {
+                                labels: {
+                                    include: {
+                                        label: true
+                                    }
+                                }
+                            },
+                            orderBy: { order: 'asc' }
+                        }
+                    },
                     orderBy: { order: 'asc' }
                 },
+                labels: true,
                 owner: { select: { name: true, avatar: true } },
                 members: { include: { user: { select: { id: true, name: true, avatar: true } } } }
             },
@@ -100,6 +114,7 @@ export const getBoardById = async (req: AuthRequest, res: Response) => {
 
         res.json(board);
     } catch (error) {
+        console.error('[getBoardById] Error:', error);
         res.status(500).json({ error: 'Error fetching board' });
     }
 };
