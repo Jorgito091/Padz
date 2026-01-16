@@ -58,6 +58,8 @@ model Card {
   list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
   comments    Comment[]
   labels      CardLabel[]
+  dueDate     DateTime?
+  isDone      Boolean     @default(false)
 }
 
 model Label {

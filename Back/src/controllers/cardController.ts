@@ -3,18 +3,22 @@ import { AuthRequest } from '../middleware/authMiddleware';
 import prisma from '../prisma';
 
 export const createCard = async (req: AuthRequest, res: Response) => {
-    const { title, description, order, listId } = req.body;
+    const { title, description, order, listId, dueDate, isDone } = req.body;
     try {
         const list = await prisma.list.findUnique({
             where: { id: listId },
-            include: { board: true }
+            include: { board: { include: { members: true } } }
         });
 
         if (!list) return res.status(404).json({ error: 'List not found' });
-        if (list.board.ownerId !== req.userId) return res.status(403).json({ error: 'Access denied' });
+
+        const isMember = list.board.members.some((m: any) => m.userId === req.userId);
+        if (list.board.ownerId !== req.userId && !isMember) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
 
         const card = await prisma.card.create({
-            data: { title, description, order, listId },
+            data: { title, description, order, listId, dueDate, isDone },
         });
         res.status(201).json(card);
     } catch (error) {
@@ -24,15 +28,19 @@ export const createCard = async (req: AuthRequest, res: Response) => {
 
 export const updateCard = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
-    const { title, description, order, listId } = req.body;
+    const { title, description, order, listId, dueDate, isDone } = req.body;
     try {
         const card = await prisma.card.findUnique({
             where: { id },
-            include: { list: { include: { board: true } } }
+            include: { list: { include: { board: { include: { members: true } } } } }
         });
 
         if (!card) return res.status(404).json({ error: 'Card not found' });
-        if (card.list.board.ownerId !== req.userId) return res.status(403).json({ error: 'Access denied' });
+
+        const isMember = card.list.board.members.some((m: any) => m.userId === req.userId);
+        if (card.list.board.ownerId !== req.userId && !isMember) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
 
         const updatedCard = await prisma.card.update({
             where: { id },
@@ -40,7 +48,9 @@ export const updateCard = async (req: AuthRequest, res: Response) => {
                 title,
                 description,
                 order,
-                listId
+                listId,
+                dueDate,
+                isDone
             }
         });
         res.json(updatedCard);
@@ -54,11 +64,15 @@ export const deleteCard = async (req: AuthRequest, res: Response) => {
     try {
         const card = await prisma.card.findUnique({
             where: { id },
-            include: { list: { include: { board: true } } }
+            include: { list: { include: { board: { include: { members: true } } } } }
         });
 
         if (!card) return res.status(404).json({ error: 'Card not found' });
-        if (card.list.board.ownerId !== req.userId) return res.status(403).json({ error: 'Access denied' });
+
+        const isMember = card.list.board.members.some((m: any) => m.userId === req.userId);
+        if (card.list.board.ownerId !== req.userId && !isMember) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
 
         await prisma.card.delete({ where: { id } });
         res.status(204).send();

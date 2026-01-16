@@ -37,6 +37,8 @@ interface Card {
     labels?: {
         label: LabelData;
     }[];
+    dueDate?: string;
+    isDone?: boolean;
 }
 interface LabelData {
     id: string;
@@ -136,6 +138,8 @@ const DashboardPage: React.FC = () => {
     const [editingCard, setEditingCard] = useState<Card | null>(null);
     const [editCardTitle, setEditCardTitle] = useState('');
     const [editCardDescription, setEditCardDescription] = useState('');
+    const [editCardDueDate, setEditCardDueDate] = useState('');
+    const [editCardIsDone, setEditCardIsDone] = useState(false);
 
     // Comments State
     const [cardComments, setCardComments] = useState<CommentData[]>([]);
@@ -415,10 +419,19 @@ const DashboardPage: React.FC = () => {
         }
     };
 
+    const formatToLocalISO = (dateStr: string | null | undefined) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        const tzOffset = date.getTimezoneOffset() * 60000;
+        return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+    };
+
     const openEditModal = (card: Card) => {
         setEditingCard(card);
         setEditCardTitle(card.title);
         setEditCardDescription(card.description || '');
+        setEditCardDueDate(formatToLocalISO(card.dueDate));
+        setEditCardIsDone(card.isDone || false);
         setCardComments([]);
         fetchComments(card.id);
         setIsLabelPickerOpen(false);
@@ -528,7 +541,7 @@ const DashboardPage: React.FC = () => {
                     ...l,
                     cards: l.cards.map(c =>
                         c.id === editingCard.id
-                            ? { ...c, title: editCardTitle, description: editCardDescription }
+                            ? { ...c, title: editCardTitle, description: editCardDescription, dueDate: editCardDueDate || undefined, isDone: editCardIsDone }
                             : c
                     )
                 };
@@ -543,7 +556,9 @@ const DashboardPage: React.FC = () => {
                 title: editCardTitle,
                 description: editCardDescription,
                 order: editingCard.order,
-                listId: editingCard.listId
+                listId: editingCard.listId,
+                dueDate: editCardDueDate ? new Date(editCardDueDate).toISOString() : null,
+                isDone: editCardIsDone
             });
             fetchBoardDetail(selectedBoard.id);
         } catch (error) {
@@ -1047,6 +1062,8 @@ const DashboardPage: React.FC = () => {
                                                                     onEdit={() => openEditModal(card)}
                                                                     onDelete={() => handleDeleteCard(card.id, list.id)}
                                                                     labels={card.labels}
+                                                                    dueDate={card.dueDate}
+                                                                    isDone={card.isDone}
                                                                 />
                                                             ))}
                                                         </div>
@@ -1182,6 +1199,43 @@ const DashboardPage: React.FC = () => {
                                         >
                                             <Plus size={16} />
                                         </button>
+                                    </div>
+
+                                    <div className="flex gap-4 mb-6">
+                                        <div className="flex-1">
+                                            <label className="block text-sm font-medium text-gray-400 mb-2 font-semibold uppercase tracking-wider">Vencimiento</label>
+                                            <div className="relative group/date">
+                                                <input
+                                                    type="datetime-local"
+                                                    value={editCardDueDate}
+                                                    onChange={(e) => setEditCardDueDate(e.target.value)}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50 transition-all text-sm pr-10"
+                                                />
+                                                {editCardDueDate && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setEditCardDueDate('')}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col justify-end">
+                                            <label className="flex items-center gap-2 cursor-pointer group mb-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={editCardIsDone}
+                                                    onChange={(e) => setEditCardIsDone(e.target.checked)}
+                                                    className="hidden"
+                                                />
+                                                <div className={`w-10 h-6 rounded-full transition-all relative ${editCardIsDone ? 'bg-green-500' : 'bg-white/10'}`}>
+                                                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${editCardIsDone ? 'left-5' : 'left-1'}`} />
+                                                </div>
+                                                <span className="text-sm font-medium text-gray-400 group-hover:text-white transition-colors">Hecho</span>
+                                            </label>
+                                        </div>
                                     </div>
 
                                     <AnimatePresence>

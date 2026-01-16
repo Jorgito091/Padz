@@ -2,7 +2,7 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Clock, CheckCircle2 } from 'lucide-react';
 
 interface CardProps {
     id: string;
@@ -12,9 +12,11 @@ interface CardProps {
     onEdit?: () => void;
     onDelete?: () => void;
     labels?: { label: { color: string, name: string } }[];
+    dueDate?: string;
+    isDone?: boolean;
 }
 
-export const SortableCard: React.FC<CardProps> = ({ id, title, description, onClick, onEdit, onDelete, labels }) => {
+export const SortableCard: React.FC<CardProps> = ({ id, title, description, onClick, onEdit, onDelete, labels, dueDate, isDone }) => {
     const {
         attributes,
         listeners,
@@ -55,6 +57,20 @@ export const SortableCard: React.FC<CardProps> = ({ id, title, description, onCl
                         <div className="font-medium text-white">{title}</div>
                         {description && (
                             <div className="text-xs text-gray-500 mt-2 line-clamp-2">{description}</div>
+                        )}
+
+                        {dueDate && (
+                            <div className={`mt-3 flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm w-fit transition-all ${isDone
+                                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                    : new Date(dueDate) < new Date()
+                                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                        : new Date(dueDate).getTime() - new Date().getTime() < 86400000
+                                            ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                                            : 'bg-white/5 text-gray-400 border border-white/10'
+                                }`}>
+                                {isDone ? <CheckCircle2 size={10} /> : <Clock size={10} />}
+                                <span>{new Date(dueDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
+                            </div>
                         )}
                     </div>
 

@@ -54,3 +54,11 @@ body {
 ::-webkit-scrollbar-thumb {
   @apply bg-white/10 rounded-full hover:bg-white/20;
 }
+
+/* Ensure native pickers (date, color) look good in dark mode */
+input[type="datetime-local"],
+input[type="date"],
+input[type="time"],
+input[type="color"] {
+  color-scheme: dark;
+}
