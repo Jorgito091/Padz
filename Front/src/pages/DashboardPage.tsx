@@ -26,70 +26,14 @@ import api from '../services/api';
 import { SortableCard } from '../components/SortableCard';
 import { SortableBoard } from '../components/SortableBoard';
 
+// Modular Components
+import { BoardGrid } from '../components/board/BoardGrid';
+import { BoardHeader } from '../components/board/BoardHeader';
+import { CardDetailModal } from '../components/modals/CardDetailModal';
+import { MembersModal } from '../components/modals/MembersModal';
+
 // Types
-interface Card {
-    id: string;
-    title: string;
-    description?: string;
-    order: number;
-    listId: string;
-    comments?: CommentData[];
-    labels?: {
-        label: LabelData;
-    }[];
-    dueDate?: string;
-    isDone?: boolean;
-}
-interface LabelData {
-    id: string;
-    name: string;
-    color: string;
-    boardId: string;
-}
-interface CommentData {
-    id: string;
-    text: string;
-    createdAt: string;
-    user: {
-        id: string;
-        name: string;
-        avatar?: string;
-    };
-}
-interface List {
-    id: string;
-    title: string;
-    order: number;
-    cards: Card[];
-}
-interface BoardMember {
-    id: string;
-    role: string;
-    userId: string;
-    user: {
-        id: string;
-        name: string;
-        avatar?: string;
-        email?: string;
-    };
-}
-interface Board {
-    id: string;
-    title: string;
-    description?: string;
-    bgImage?: string;
-    bgColor?: string;
-    lists?: List[];
-    ownerId: string;
-    owner?: {
-        name: string;
-        avatar?: string;
-    };
-    members?: BoardMember[];
-    labels?: LabelData[];
-    isStarred?: boolean;
-    order?: number;
-}
+import { Board, List, Card, LabelData, CommentData, BoardMember } from '../types';
 
 const DashboardPage: React.FC = () => {
     const { user, logout, updateUser } = useAuth();
@@ -117,12 +61,9 @@ const DashboardPage: React.FC = () => {
 
     // Member Management State
     const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
-    const [inviteEmail, setInviteEmail] = useState('');
-    const [isInviting, setIsInviting] = useState(false);
 
     // DND State
     const [activeId, setActiveId] = useState<string | null>(null);
-
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
@@ -136,20 +77,6 @@ const DashboardPage: React.FC = () => {
 
     // Edit Card State
     const [editingCard, setEditingCard] = useState<Card | null>(null);
-    const [editCardTitle, setEditCardTitle] = useState('');
-    const [editCardDescription, setEditCardDescription] = useState('');
-    const [editCardDueDate, setEditCardDueDate] = useState('');
-    const [editCardIsDone, setEditCardIsDone] = useState(false);
-
-    // Comments State
-    const [cardComments, setCardComments] = useState<CommentData[]>([]);
-    const [newCommentText, setNewCommentText] = useState('');
-    const [isPostingComment, setIsPostingComment] = useState(false);
-
-    // Labels Creation State
-    const [isLabelPickerOpen, setIsLabelPickerOpen] = useState(false);
-    const [newLabelForm, setNewLabelForm] = useState({ name: '', color: '#f97316' }); // default orange
-    const [isCreatingLabel, setIsCreatingLabel] = useState(false);
 
 
 
@@ -267,6 +194,7 @@ const DashboardPage: React.FC = () => {
         }
     };
 
+    // List & Card handlers
     const handleCreateList = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newListTitle.trim() || !selectedBoard) return;
@@ -286,6 +214,12 @@ const DashboardPage: React.FC = () => {
         } catch (error) {
             console.error('Error creating list:', error);
         }
+    };
+
+    const handleBoardClick = (board: Board) => {
+        setSelectedBoard(board);
+        setView('board');
+        fetchBoardDetail(board.id);
     };
 
     const handleCreateCard = async (listId: string) => {
@@ -330,39 +264,7 @@ const DashboardPage: React.FC = () => {
             await api.delete(`/cards/${cardId}`);
         } catch (error) {
             console.error('Error deleting card:', error);
-            // Revert on error (optional, for MVP we skip complex revert logic)
             fetchBoardDetail(selectedBoard.id);
-        }
-    };
-
-    const handleInviteMember = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!inviteEmail.trim() || !selectedBoard) return;
-
-        setIsInviting(true);
-        try {
-            await api.post('/members', {
-                boardId: selectedBoard.id,
-                email: inviteEmail,
-                role: 'MEMBER'
-            });
-            // Refetch board detail to show new member
-            await fetchBoardDetail(selectedBoard.id);
-            setInviteEmail('');
-        } catch (error: any) {
-            alert(error.response?.data?.error || 'Error al invitar miembro');
-        } finally {
-            setIsInviting(false);
-        }
-    };
-
-    const handleRemoveMember = async (memberUserId: string) => {
-        if (!selectedBoard) return;
-        try {
-            await api.delete(`/members/${selectedBoard.id}/${memberUserId}`);
-            await fetchBoardDetail(selectedBoard.id);
-        } catch (error) {
-            console.error('Error removing member:', error);
         }
     };
 
@@ -381,196 +283,8 @@ const DashboardPage: React.FC = () => {
         }
     };
 
-    const fetchComments = async (cardId: string) => {
-        try {
-            const response = await api.get(`/comments/${cardId}`);
-            setCardComments(response.data);
-        } catch (error) {
-            console.error('Error fetching comments:', error);
-        }
-    };
-
-    const handlePostComment = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newCommentText.trim() || !editingCard) return;
-
-        setIsPostingComment(true);
-        try {
-            const response = await api.post('/comments', {
-                cardId: editingCard.id,
-                text: newCommentText
-            });
-            setCardComments([response.data, ...cardComments]);
-            setNewCommentText('');
-        } catch (error) {
-            console.error('Error posting comment:', error);
-        } finally {
-            setIsPostingComment(true);
-            setIsPostingComment(false);
-        }
-    };
-
-    const handleDeleteComment = async (commentId: string) => {
-        try {
-            await api.delete(`/comments/${commentId}`);
-            setCardComments(cardComments.filter(c => c.id !== commentId));
-        } catch (error) {
-            console.error('Error deleting comment:', error);
-        }
-    };
-
-    const formatToLocalISO = (dateStr: string | null | undefined) => {
-        if (!dateStr) return '';
-        const date = new Date(dateStr);
-        const tzOffset = date.getTimezoneOffset() * 60000;
-        return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
-    };
-
     const openEditModal = (card: Card) => {
         setEditingCard(card);
-        setEditCardTitle(card.title);
-        setEditCardDescription(card.description || '');
-        setEditCardDueDate(formatToLocalISO(card.dueDate));
-        setEditCardIsDone(card.isDone || false);
-        setCardComments([]);
-        fetchComments(card.id);
-        setIsLabelPickerOpen(false);
-    };
-
-    const handleCreateLabel = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newLabelForm.name.trim() || !selectedBoard) return;
-
-        setIsCreatingLabel(true);
-        try {
-            const response = await api.post('/labels', {
-                ...newLabelForm,
-                boardId: selectedBoard.id
-            });
-            setSelectedBoard({
-                ...selectedBoard,
-                labels: [...(selectedBoard.labels || []), response.data]
-            });
-            setNewLabelForm({ name: '', color: '#f97316' });
-        } catch (error) {
-            console.error('Error creating label:', error);
-        } finally {
-            setIsCreatingLabel(false);
-        }
-    };
-
-    const handleAssignLabel = async (labelId: string) => {
-        if (!editingCard || !selectedBoard) return;
-
-        // Skip if already assigned
-        if (editingCard.labels?.some(l => l.label.id === labelId)) {
-            // Unassign instead
-            handleUnassignLabel(labelId);
-            return;
-        }
-
-        try {
-            await api.post('/labels/assign', {
-                cardId: editingCard.id,
-                labelId
-            });
-
-            // Refresh board to get updated card labels
-            fetchBoardDetail(selectedBoard.id);
-
-            // Local update of editingCard if possible (or just trust fetchBoardDetail)
-            const labelData = selectedBoard.labels?.find(l => l.id === labelId);
-            if (labelData) {
-                setEditingCard({
-                    ...editingCard,
-                    labels: [...(editingCard.labels || []), { label: labelData }]
-                });
-            }
-        } catch (error) {
-            console.error('Error assigning label:', error);
-        }
-    };
-
-    const handleUnassignLabel = async (labelId: string) => {
-        if (!editingCard || !selectedBoard) return;
-
-        try {
-            await api.delete(`/labels/unassign/${editingCard.id}/${labelId}`);
-
-            // Refresh
-            fetchBoardDetail(selectedBoard.id);
-
-            setEditingCard({
-                ...editingCard,
-                labels: editingCard.labels?.filter(l => l.label.id !== labelId)
-            });
-        } catch (error) {
-            console.error('Error unassigning label:', error);
-        }
-    };
-
-    const handleDeleteLabelData = async (e: React.MouseEvent, labelId: string) => {
-        e.stopPropagation();
-        if (!selectedBoard || !window.confirm('¿Eliminar esta etiqueta de todo el tablero?')) return;
-
-        try {
-            await api.delete(`/labels/${labelId}`);
-            setSelectedBoard({
-                ...selectedBoard,
-                labels: selectedBoard.labels?.filter(l => l.id !== labelId)
-            });
-            if (editingCard) {
-                setEditingCard({
-                    ...editingCard,
-                    labels: editingCard.labels?.filter(l => l.label.id !== labelId)
-                });
-            }
-        } catch (error) {
-            console.error('Error deleting label:', error);
-        }
-    };
-
-    const handleUpdateCard = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!editingCard || !selectedBoard) return;
-
-        // Optimistic update
-        const updatedLists = selectedBoard.lists?.map(l => {
-            if (l.cards.some(c => c.id === editingCard.id)) {
-                return {
-                    ...l,
-                    cards: l.cards.map(c =>
-                        c.id === editingCard.id
-                            ? { ...c, title: editCardTitle, description: editCardDescription, dueDate: editCardDueDate || undefined, isDone: editCardIsDone }
-                            : c
-                    )
-                };
-            }
-            return l;
-        });
-        setSelectedBoard({ ...selectedBoard, lists: updatedLists });
-        setEditingCard(null);
-
-        try {
-            await api.put(`/cards/${editingCard.id}`, {
-                title: editCardTitle,
-                description: editCardDescription,
-                order: editingCard.order,
-                listId: editingCard.listId,
-                dueDate: editCardDueDate ? new Date(editCardDueDate).toISOString() : null,
-                isDone: editCardIsDone
-            });
-            fetchBoardDetail(selectedBoard.id);
-        } catch (error) {
-            console.error('Error updating card:', error);
-            fetchBoardDetail(selectedBoard.id);
-        }
-    };
-
-    const handleBoardClick = (board: Board) => {
-        setSelectedBoard(board);
-        setView('board');
-        fetchBoardDetail(board.id);
     };
 
     // DND Logic
@@ -818,142 +532,21 @@ const DashboardPage: React.FC = () => {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
                         >
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                                <div className="flex items-center gap-3">
-                                    <LayoutGrid className="text-orange-500" />
-                                    <h1 className="text-3xl font-bold text-white tracking-tight">Mis Tableros</h1>
-                                </div>
-                                <div className="relative flex-1 max-w-md">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
-                                    <input
-                                        type="text"
-                                        placeholder="Buscar tableros..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all"
-                                    />
-                                </div>
-                            </div>
-
-                            {loading ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                    {[1, 2, 3, 4].map((n) => (
-                                        <div key={n} className="h-40 rounded-2xl bg-white/5 border border-white/10 shadow-xl animate-pulse opacity-50" />
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="space-y-12">
-                                    {/* Starred Boards */}
-                                    {boards.filter(b => b.isStarred && b.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 && (
-                                        <section>
-                                            <div className="flex items-center gap-2 mb-6 text-gray-400">
-                                                <Star size={16} className="fill-orange-500 text-orange-500" />
-                                                <h2 className="text-sm font-bold uppercase tracking-widest">Favoritos</h2>
-                                            </div>
-                                            <SortableContext items={boards.filter(b => b.isStarred && b.title.toLowerCase().includes(searchTerm.toLowerCase())).map(b => b.id)} strategy={rectSortingStrategy}>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                                    {boards.filter(b => b.isStarred && b.title.toLowerCase().includes(searchTerm.toLowerCase())).map((board) => (
-                                                        <SortableBoard key={board.id} id={board.id}>
-                                                            <motion.div
-                                                                whileHover={{ scale: 1.02, y: -5 }}
-                                                                whileTap={{ scale: 0.98 }}
-                                                                onClick={() => handleBoardClick(board)}
-                                                                className={`h-40 p-6 backdrop-blur-xl bg-white/5 border border-white/5 hover:border-white/20 rounded-2xl cursor-pointer flex flex-col justify-end shadow-xl transition-all group overflow-hidden relative`}
-                                                            >
-                                                                <div className={`absolute inset-0 bg-gradient-to-br ${board.bgColor || 'from-orange-600/20 to-orange-900/20'} opacity-40 group-hover:opacity-60 transition-all`} />
-
-                                                                {/* Star Button */}
-                                                                <button
-                                                                    onClick={(e) => handleToggleStar(e, board)}
-                                                                    className="absolute top-4 left-4 p-2 bg-black/20 hover:bg-black/40 rounded-lg text-orange-500 transition-all z-20"
-                                                                >
-                                                                    <Star size={16} className="fill-current" />
-                                                                </button>
-
-                                                                <div className="relative z-10 flex flex-col h-full">
-                                                                    <div className="flex justify-between items-start mb-auto pl-8">
-                                                                        <h3 className="text-xl font-bold text-white group-hover:text-white transition-colors uppercase tracking-tight shadow-sm line-clamp-2 pr-8">{board.title}</h3>
-                                                                        <button
-                                                                            onClick={(e) => handleDeleteBoard(e, board.id, board.ownerId === user?.id)}
-                                                                            className="p-2 hover:bg-black/20 rounded-lg text-white/40 hover:text-white transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
-                                                                            title={board.ownerId === user?.id ? "Eliminar tablero" : "Salir del tablero"}
-                                                                        >
-                                                                            {board.ownerId === user?.id ? <Trash2 size={16} /> : <LogOut size={16} />}
-                                                                        </button>
-                                                                    </div>
-                                                                    {board.description && (
-                                                                        <p className="text-xs text-gray-300 mt-1 line-clamp-2">{board.description}</p>
-                                                                    )}
-                                                                </div>
-                                                            </motion.div>
-                                                        </SortableBoard>
-                                                    ))}
-                                                </div>
-                                            </SortableContext>
-                                        </section>
-                                    )}
-
-                                    {/* All Boards */}
-                                    <section>
-                                        <div className="flex items-center gap-2 mb-6 text-gray-400">
-                                            <LayoutGrid size={16} />
-                                            <h2 className="text-sm font-bold uppercase tracking-widest">
-                                                {boards.some(b => b.isStarred) ? "Resto de Tableros" : "Todos los Tableros"}
-                                            </h2>
-                                        </div>
-                                        <SortableContext items={boards.filter(b => !b.isStarred && b.title.toLowerCase().includes(searchTerm.toLowerCase())).map(b => b.id)} strategy={rectSortingStrategy}>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                                {boards.filter(b => !b.isStarred && b.title.toLowerCase().includes(searchTerm.toLowerCase())).map((board) => (
-                                                    <SortableBoard key={board.id} id={board.id}>
-                                                        <motion.div
-                                                            whileHover={{ scale: 1.02, y: -5 }}
-                                                            whileTap={{ scale: 0.98 }}
-                                                            onClick={() => handleBoardClick(board)}
-                                                            className={`h-40 p-6 backdrop-blur-xl bg-white/5 border border-white/5 hover:border-white/20 rounded-2xl cursor-pointer flex flex-col justify-end shadow-xl transition-all group overflow-hidden relative`}
-                                                        >
-                                                            <div className={`absolute inset-0 bg-gradient-to-br ${board.bgColor || 'from-orange-600/20 to-orange-900/20'} opacity-40 group-hover:opacity-60 transition-all`} />
-
-                                                            {/* Star Button */}
-                                                            <button
-                                                                onClick={(e) => handleToggleStar(e, board)}
-                                                                className="absolute top-4 left-4 p-2 bg-black/20 hover:bg-black/40 rounded-lg text-white/40 hover:text-orange-500 transition-all z-20 opacity-0 group-hover:opacity-100"
-                                                            >
-                                                                <Star size={16} />
-                                                            </button>
-
-                                                            <div className="relative z-10 flex flex-col h-full">
-                                                                <div className="flex justify-between items-start mb-auto pl-8">
-                                                                    <h3 className="text-xl font-bold text-white group-hover:text-white transition-colors uppercase tracking-tight shadow-sm line-clamp-2 pr-8">{board.title}</h3>
-                                                                    <button
-                                                                        onClick={(e) => handleDeleteBoard(e, board.id, board.ownerId === user?.id)}
-                                                                        className="p-2 hover:bg-black/20 rounded-lg text-white/40 hover:text-white transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
-                                                                        title={board.ownerId === user?.id ? "Eliminar tablero" : "Salir del tablero"}
-                                                                    >
-                                                                        {board.ownerId === user?.id ? <Trash2 size={16} /> : <LogOut size={16} />}
-                                                                    </button>
-                                                                </div>
-                                                                {board.description && (
-                                                                    <p className="text-xs text-gray-300 mt-1 line-clamp-2">{board.description}</p>
-                                                                )}
-                                                            </div>
-                                                        </motion.div>
-                                                    </SortableBoard>
-                                                ))}
-
-                                                <div
-                                                    onClick={openCreateBoardModal}
-                                                    className="h-40 p-6 rounded-2xl border-2 border-dashed border-white/5 hover:border-orange-500/50 hover:bg-white/5 transition-all cursor-pointer flex flex-col items-center justify-center gap-3 text-gray-400 hover:text-white group"
-                                                >
-                                                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-orange-500/20 group-hover:text-orange-400 transition-all">
-                                                        <Plus />
-                                                    </div>
-                                                    <span className="font-medium">Nuevo Tablero</span>
-                                                </div>
-                                            </div>
-                                        </SortableContext>
-                                    </section>
-                                </div>
-                            )}
+                            <BoardGrid
+                                boards={boards}
+                                searchTerm={searchTerm}
+                                onSearchChange={setSearchTerm}
+                                onCreateBoard={openCreateBoardModal}
+                                onEditBoard={openEditBoardModal}
+                                onDeleteBoard={handleDeleteBoard}
+                                onToggleStar={handleToggleStar}
+                                onBoardClick={handleBoardClick}
+                                activeId={activeId}
+                                sensors={sensors}
+                                onDragStart={handleDragStart}
+                                onDragEnd={handleDragEnd}
+                                user={user}
+                            />
                         </motion.div>
                     ) : (
                         <motion.div
@@ -962,60 +555,14 @@ const DashboardPage: React.FC = () => {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
                         >
-                            {/* Board Header */}
-                            <div className="flex items-center gap-4 mb-8 backdrop-blur-md bg-white/5 p-6 rounded-2xl border border-white/10 relative overflow-hidden">
-                                <button
-                                    onClick={() => setView('dashboard')}
-                                    className="relative z-10 p-2.5 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-all"
-                                >
-                                    <ArrowLeft size={20} />
-                                </button>
-
-                                <div className="relative z-10 flex-1">
-                                    <div className="flex items-center gap-4">
-                                        <h1 className="text-3xl font-bold text-white">{selectedBoard?.title}</h1>
-
-                                        {/* Board Members Avatars */}
-                                        <div className="flex -space-x-2 ml-4">
-                                            {/* Owner */}
-                                            <div className="w-8 h-8 rounded-full border-2 border-[#1a1a1c] overflow-hidden bg-orange-600 flex items-center justify-center text-[10px] font-bold shadow-lg" title={`Dueño: ${selectedBoard?.owner?.name}`}>
-                                                {selectedBoard?.owner?.avatar ? (
-                                                    <img src={selectedBoard.owner.avatar} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <span>{selectedBoard?.owner?.name.charAt(0).toUpperCase()}</span>
-                                                )}
-                                            </div>
-                                            {/* Members */}
-                                            {selectedBoard?.members?.map(m => (
-                                                <div key={m.id} className="w-8 h-8 rounded-full border-2 border-[#1a1a1c] overflow-hidden bg-zinc-700 flex items-center justify-center text-[10px] font-bold shadow-lg" title={m.user.name}>
-                                                    {m.user.avatar ? (
-                                                        <img src={m.user.avatar} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <span>{m.user.name.charAt(0).toUpperCase()}</span>
-                                                    )}
-                                                </div>
-                                            ))}
-                                            <button
-                                                onClick={() => setIsMembersModalOpen(true)}
-                                                className="w-8 h-8 rounded-full border-2 border-[#1a1a1c] bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors shadow-lg"
-                                                title="Invitar miembros"
-                                            >
-                                                <Plus size={14} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                    {selectedBoard?.description && (
-                                        <p className="text-sm text-gray-300 mt-1 max-w-2xl">{selectedBoard.description}</p>
-                                    )}
-                                </div>
-                                <button
-                                    onClick={() => openEditBoardModal(selectedBoard!)}
-                                    className="relative z-10 p-2.5 backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-all ml-auto hover:bg-white/10"
-                                    title="Configuración"
-                                >
-                                    <Settings size={20} />
-                                </button>
-                            </div>
+                            {selectedBoard && (
+                                <BoardHeader
+                                    board={selectedBoard}
+                                    onBack={() => setView('dashboard')}
+                                    onMembersClick={() => setIsMembersModalOpen(true)}
+                                    onSettingsClick={() => openEditBoardModal(selectedBoard)}
+                                />
+                            )}
 
                             <DndContext
                                 sensors={sensors}
@@ -1043,7 +590,11 @@ const DashboardPage: React.FC = () => {
                                                             >
                                                                 <Trash2 size={15} />
                                                             </button>
-                                                            <button className="p-1.5 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-all"><Plus size={18} /></button>
+                                                            <button
+                                                                onClick={() => { setActiveListId(list.id); setNewCardTitle(''); }}
+                                                                className="p-1.5 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white transition-all">
+                                                                <Plus size={18} />
+                                                            </button>
                                                         </div>
                                                     </div>
 
@@ -1143,7 +694,6 @@ const DashboardPage: React.FC = () => {
                                 <DragOverlay>
                                     {activeId ? (
                                         <div className="bg-white/10 p-4 rounded-xl border border-orange-500 ring-2 ring-orange-500/50 shadow-2xl text-white rotate-3 cursor-grabbing backdrop-blur-lg">
-                                            {/* We need to find the card data to render here. For simplicity we just show a placeholder or look it up */}
                                             {selectedBoard?.lists?.flatMap(l => l.cards).find(c => c.id === activeId)?.title}
                                         </div>
                                     ) : null}
@@ -1153,240 +703,15 @@ const DashboardPage: React.FC = () => {
                     )}
                 </AnimatePresence>
 
-                {/* Edit Card Modal */}
-                {editingCard && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="w-full max-w-md bg-[#1a1a1c] border border-white/10 rounded-2xl p-6 shadow-2xl"
-                        >
-                            <h2 className="text-xl font-bold mb-4">Editar Tarjeta</h2>
-                            <form onSubmit={handleUpdateCard} className="space-y-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2 font-semibold uppercase tracking-wider">Título de la Tarjeta</label>
-                                    <input
-                                        type="text"
-                                        value={editCardTitle}
-                                        onChange={(e) => setEditCardTitle(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50 transition-all font-medium"
-                                        placeholder="Título de la tarjeta"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2 font-semibold uppercase tracking-wider">Etiquetas</label>
-                                    <div className="flex flex-wrap gap-2 mb-3">
-                                        {editingCard.labels?.map((l) => (
-                                            <div
-                                                key={l.label.id}
-                                                className="px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 group/btn"
-                                                style={{ backgroundColor: `${l.label.color}33`, border: `1px solid ${l.label.color}66`, color: l.label.color }}
-                                            >
-                                                {l.label.name}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleUnassignLabel(l.label.id)}
-                                                    className="hover:text-white transition-colors"
-                                                >
-                                                    <X size={12} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsLabelPickerOpen(!isLabelPickerOpen)}
-                                            className="w-8 h-8 rounded-full bg-white/5 border border-dashed border-white/20 flex items-center justify-center text-gray-400 hover:text-white hover:border-orange-500/50 transition-all"
-                                        >
-                                            <Plus size={16} />
-                                        </button>
-                                    </div>
-
-                                    <div className="flex gap-4 mb-6">
-                                        <div className="flex-1">
-                                            <label className="block text-sm font-medium text-gray-400 mb-2 font-semibold uppercase tracking-wider">Vencimiento</label>
-                                            <div className="relative group/date">
-                                                <input
-                                                    type="datetime-local"
-                                                    value={editCardDueDate}
-                                                    onChange={(e) => setEditCardDueDate(e.target.value)}
-                                                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50 transition-all text-sm pr-10"
-                                                />
-                                                {editCardDueDate && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setEditCardDueDate('')}
-                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
-                                                    >
-                                                        <X size={14} />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col justify-end">
-                                            <label className="flex items-center gap-2 cursor-pointer group mb-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={editCardIsDone}
-                                                    onChange={(e) => setEditCardIsDone(e.target.checked)}
-                                                    className="hidden"
-                                                />
-                                                <div className={`w-10 h-6 rounded-full transition-all relative ${editCardIsDone ? 'bg-green-500' : 'bg-white/10'}`}>
-                                                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${editCardIsDone ? 'left-5' : 'left-1'}`} />
-                                                </div>
-                                                <span className="text-sm font-medium text-gray-400 group-hover:text-white transition-colors">Hecho</span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <AnimatePresence>
-                                        {isLabelPickerOpen && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: -10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: -10 }}
-                                                className="bg-zinc-900 border border-white/10 rounded-xl p-4 mb-4 shadow-xl"
-                                            >
-                                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Seleccionar Etiqueta</h4>
-                                                <div className="space-y-2 mb-4 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                                                    {selectedBoard?.labels?.map(label => {
-                                                        const isAssigned = editingCard.labels?.some(l => l.label.id === label.id);
-                                                        return (
-                                                            <div
-                                                                key={label.id}
-                                                                onClick={() => handleAssignLabel(label.id)}
-                                                                className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all ${isAssigned ? 'bg-orange-500/10 border border-orange-500/30' : 'hover:bg-white/5'}`}
-                                                            >
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: label.color }} />
-                                                                    <span className="text-sm font-medium">{label.name}</span>
-                                                                </div>
-                                                                <button
-                                                                    onClick={(e) => handleDeleteLabelData(e, label.id)}
-                                                                    className="p-1 text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-                                                                >
-                                                                    <Trash2 size={12} />
-                                                                </button>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-
-                                                <div className="border-t border-white/5 pt-4">
-                                                    <div className="flex gap-2">
-                                                        <input
-                                                            type="text"
-                                                            value={newLabelForm.name}
-                                                            onChange={(e) => setNewLabelForm({ ...newLabelForm, name: e.target.value })}
-                                                            placeholder="Nueva etiqueta..."
-                                                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                                                        />
-                                                        <input
-                                                            type="color"
-                                                            value={newLabelForm.color}
-                                                            onChange={(e) => setNewLabelForm({ ...newLabelForm, color: e.target.value })}
-                                                            className="w-8 h-8 rounded p-0 border-none bg-transparent cursor-pointer"
-                                                        />
-                                                        <button
-                                                            type="button"
-                                                            onClick={handleCreateLabel}
-                                                            disabled={isCreatingLabel || !newLabelForm.name.trim()}
-                                                            className="p-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-white disabled:opacity-50"
-                                                        >
-                                                            <Plus size={16} />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2 font-semibold uppercase tracking-wider">Descripción</label>
-                                    <textarea
-                                        value={editCardDescription}
-                                        onChange={(e) => setEditCardDescription(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50 h-32 resize-none transition-all"
-                                        placeholder="Añade una descripción más detallada..."
-                                    />
-                                </div>
-
-                                {/* Seccion de Comentarios */}
-                                <div className="border-t border-white/10 pt-6">
-                                    <h3 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider">Comentarios</h3>
-
-                                    <div className="flex gap-2 mb-6">
-                                        <div className="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-xs font-bold border border-white/10 flex-shrink-0">
-                                            {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover rounded-full" /> : user?.name.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div className="flex-1 flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={newCommentText}
-                                                onChange={(e) => setNewCommentText(e.target.value)}
-                                                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                                                placeholder="Escribe un comentario..."
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={handlePostComment}
-                                                disabled={isPostingComment || !newCommentText.trim()}
-                                                className="p-1.5 bg-orange-600 hover:bg-orange-500 rounded-lg text-white disabled:opacity-50 transition-colors"
-                                            >
-                                                <Send size={16} />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
-                                        {cardComments.map((comment) => (
-                                            <div key={comment.id} className="flex gap-3 group">
-                                                <div className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-xs font-bold border border-white/10 flex-shrink-0">
-                                                    {comment.user.avatar ? <img src={comment.user.avatar} className="w-full h-full object-cover rounded-full" /> : comment.user.name.charAt(0).toUpperCase()}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-sm font-bold text-white">{comment.user.name}</span>
-                                                        <span className="text-[10px] text-gray-500">{new Date(comment.createdAt).toLocaleString()}</span>
-                                                        {(comment.user.id === user?.id || selectedBoard?.ownerId === user?.id) && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleDeleteComment(comment.id)}
-                                                                className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-all"
-                                                            >
-                                                                <Trash2 size={12} />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                    <p className="text-sm text-gray-300 bg-white/5 p-3 rounded-xl border border-white/5 break-words">
-                                                        {comment.text}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                        {cardComments.length === 0 && (
-                                            <p className="text-center text-sm text-gray-500 italic py-4">Sin comentarios todavía.</p>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="flex justify-end gap-3 pt-6 border-t border-white/10">
-                                    <button
-                                        type="button"
-                                        onClick={() => setEditingCard(null)}
-                                        className="px-4 py-2 hover:bg-white/5 rounded-lg text-gray-400 transition-colors"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-bold transition-colors"
-                                    >
-                                        Guardar
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
+                {/* Card Detail Modal */}
+                {editingCard && selectedBoard && (
+                    <CardDetailModal
+                        card={editingCard}
+                        board={selectedBoard}
+                        user={user}
+                        onClose={() => setEditingCard(null)}
+                        onUpdate={() => fetchBoardDetail(selectedBoard.id)}
+                    />
                 )}
 
                 {/* Create/Edit Board Modal */}
@@ -1516,97 +841,13 @@ const DashboardPage: React.FC = () => {
 
                 {/* Members Modal */}
                 <AnimatePresence>
-                    {isMembersModalOpen && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                onClick={() => setIsMembersModalOpen(false)}
-                                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-                            />
-                            <motion.div
-                                initial={{ scale: 0.95, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.95, opacity: 0 }}
-                                className="relative w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl p-6"
-                            >
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-xl font-bold">Miembros del Tablero</h2>
-                                    <button onClick={() => setIsMembersModalOpen(false)} className="text-gray-400 hover:text-white">
-                                        <X size={20} />
-                                    </button>
-                                </div>
-
-                                <form onSubmit={handleInviteMember} className="mb-8 relative z-10">
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Invitar por correo</label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="email"
-                                            placeholder="correo@ejemplo.com"
-                                            value={inviteEmail}
-                                            onChange={(e) => setInviteEmail(e.target.value)}
-                                            className="flex-1 bg-black/40 border border-white/10 rounded-lg px-4 py-2 outline-none focus:border-orange-500 transition-all text-white"
-                                            required
-                                        />
-                                        <button
-                                            type="submit"
-                                            disabled={isInviting}
-                                            className="bg-orange-600 hover:bg-orange-500 disabled:opacity-50 px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2"
-                                        >
-                                            {isInviting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-                                            Invitar
-                                        </button>
-                                    </div>
-                                </form>
-
-                                <div className="space-y-4">
-                                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Lista de Miembros</h3>
-
-                                    {/* Owner */}
-                                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 rounded-full bg-orange-600 flex items-center justify-center font-bold overflow-hidden shadow-inner">
-                                                {selectedBoard?.owner?.avatar ? <img src={selectedBoard.owner.avatar} className="w-full h-full object-cover" /> : selectedBoard?.owner?.name.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div>
-                                                <div className="font-medium text-white">{selectedBoard?.owner?.name}</div>
-                                                <div className="text-xs text-orange-500 flex items-center gap-1 font-semibold uppercase tracking-tighter">Dueño</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Members */}
-                                    <div className="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                                        {selectedBoard?.members?.map(m => (
-                                            <div key={m.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 group">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-9 h-9 rounded-full bg-zinc-700 flex items-center justify-center font-bold overflow-hidden shadow-inner text-sm">
-                                                        {m.user.avatar ? <img src={m.user.avatar} className="w-full h-full object-cover" /> : m.user.name.charAt(0).toUpperCase()}
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-medium text-white text-sm">{m.user.name}</div>
-                                                        <div className="text-[10px] text-gray-400 truncate max-w-[150px]">{m.user.email}</div>
-                                                    </div>
-                                                </div>
-                                                {(selectedBoard?.ownerId === user?.id || m.userId === user?.id) && (
-                                                    <button
-                                                        onClick={() => handleRemoveMember(m.userId)}
-                                                        className="p-2 hover:bg-red-500/10 rounded-lg text-gray-500 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"
-                                                        title="Eliminar miembro"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
-                                        {(!selectedBoard?.members || selectedBoard.members.length === 0) && (
-                                            <div className="text-center py-4 text-sm text-gray-500 italic">No hay otros miembros aún</div>
-                                        )}
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </div>
+                    {isMembersModalOpen && selectedBoard && (
+                        <MembersModal
+                            board={selectedBoard}
+                            user={user}
+                            onClose={() => setIsMembersModalOpen(false)}
+                            onUpdate={() => fetchBoardDetail(selectedBoard.id)}
+                        />
                     )}
                 </AnimatePresence>
             </main>
