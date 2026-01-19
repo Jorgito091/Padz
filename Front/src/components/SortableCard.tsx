@@ -38,7 +38,7 @@ export const SortableCard: React.FC<CardProps> = ({ id, title, description, onCl
             <motion.div
                 layoutId={id}
                 onClick={onClick}
-                className={`bg-white/5 p-4 rounded-xl border border-white/5 hover:border-orange-500/40 cursor-grab active:cursor-grabbing transition-all shadow-sm text-gray-300 group relative ${isDragging ? 'ring-2 ring-orange-500' : ''}`}
+                className={`bg-white/5 p-4 rounded-xl border border-white/5 hover:border-orange-500/40 cursor-pointer active:cursor-grabbing transition-all shadow-sm hover:shadow-lg hover:shadow-orange-500/5 text-gray-300 group relative ${isDragging ? 'ring-2 ring-orange-500' : ''}`}
             >
                 <div className="flex justify-between items-start gap-2">
                     <div className="flex-1">
@@ -61,12 +61,12 @@ export const SortableCard: React.FC<CardProps> = ({ id, title, description, onCl
 
                         {dueDate && (
                             <div className={`mt-3 flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm w-fit transition-all ${isDone
-                                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                    : new Date(dueDate) < new Date()
-                                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                                        : new Date(dueDate).getTime() - new Date().getTime() < 86400000
-                                            ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                                            : 'bg-white/5 text-gray-400 border border-white/10'
+                                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                : new Date(dueDate) < new Date()
+                                    ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                    : new Date(dueDate).getTime() - new Date().getTime() < 86400000
+                                        ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                                        : 'bg-white/5 text-gray-400 border border-white/10'
                                 }`}>
                                 {isDone ? <CheckCircle2 size={10} /> : <Clock size={10} />}
                                 <span>{new Date(dueDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>

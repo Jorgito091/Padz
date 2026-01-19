@@ -119,6 +119,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                                         id={card.id}
                                         title={card.title}
                                         description={card.description}
+                                        onClick={() => onEditCard(card)}
                                         onEdit={() => onEditCard(card)}
                                         onDelete={() => onDeleteCard(card.id, list.id)}
                                         labels={card.labels}
