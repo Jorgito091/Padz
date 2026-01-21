@@ -1,41 +1,43 @@
 # Padz - Premium Trello Clone
 
-Padz es un gestor de tableros moderno, elegante y altamente funcional, diseñado para ofrecer una experiencia de usuario premium con un rendimiento ágil. Inspirado en Trello, pero con una estética de "Glassmorphism" y micro-animaciones que lo hacen sentir vivo.
+Padz es un gestor de tableros moderno, elegante y altamente funcional, diseñado para ofrecer una experiencia de usuario premium con un rendimiento ágil. Inspirado en Trello, pero con una estética de "Glassmorphism" vibrante en tonos naranja y micro-animaciones que lo hacen sentir vivo.
 
 ## ✨ Características Principales
 
-### 📋 Gestión de Tableros
-- **Favoritos (Starring)**: Marca tus tableros más importantes para que aparezcan siempre arriba.
-- **Buscador en Tiempo Real**: Encuentra cualquier tablero al instante por su título.
-- **Drag & Drop Reordering**: Organiza tus tableros y tarjetas simplemente arrastrándolos.
-- **Temas Dinámicos**: Fondos degradados elegantes y modernos.
+### 📋 Gestión de Tableros y Tareas
+- **Favoritos (Starring)**: Marca tus tableros más importantes para acceso rápido.
+- **Buscador en Tiempo Real**: Encuentra cualquier tablero al instante por título.
+- **Drag & Drop Inteligente**: Reordena tableros, listas y tarjetas con total fluidez.
+- **Etiquetas Personalizadas**: Crea etiquetas por tablero y organízalas visualmente en tus tarjetas.
+- **Fechas de Vencimiento**: Controla tus plazos con `dueDate` y marca tareas como completadas (`isDone`).
+- **Temas Naranja Premium**: Una interfaz oscura refinada con acentos naranja y efectos de cristal.
 
 ### 👥 Colaboración y Seguridad
-- **Sistema de Miembros**: Invita a otros usuarios a tus tableros compartiendo su email.
-- **Roles Claros**: Diferenciación entre Propietario (Owner) y Miembro (Member).
-- **Acceso Protegido**: Autenticación robusta con JWT y control de acceso por recurso.
+- **Sistema de Miembros y Roles**: Invita colaboradores con roles específicos (`OWNER`, `MEMBER`, `VIEWER`).
+- **Acceso Protegido**: Autenticación robusta con JWT y control granular de permisos sobre cada recurso.
+- **Perfil de Usuario**: Personalización de avatares para una identificación visual rápida.
 
 ### 💬 Comunicación
-- **Comentarios en Tarjetas**: Discusiones integradas en cada tarea para mantener el flujo de trabajo en un solo lugar.
-- **Avatares Personalizados**: Identificación visual rápida de los miembros y tu propio perfil.
+- **Comentarios en Tiempo Real**: Mantén la discusión centralizada dentro de cada tarjeta.
 
 ---
 
 ## 🛠️ Stack Tecnológico
 
 ### Backend (Node.js)
-- **TypeScript**: Para un desarrollo robusto y tipado.
-- **Express.js**: Framework ágil para la API REST.
-- **Prisma 7**: ORM de última generación para la gestión de datos.
-- **SQLite**: Base de datos local rápida y sin configuración externa.
-- **JWT & Bcrypt**: Estándares de seguridad para autenticación y cifrado.
+- **TypeScript**: Desarrollo robusto y tipado estricto.
+- **Express 5**: Framework de alto rendimiento para la API REST.
+- **Prisma 7**: ORM de última generación para una gestión de datos eficiente.
+- **SQLite**: Persistencia local rápida y optimizada.
+- **JWT & Bcryptjs**: Estándares de seguridad para autenticación y cifrado de datos.
 
 ### Frontend (React)
-- **Vite 6**: El bundle tool más rápido para desarrollo moderno.
-- **Tailwind CSS**: Diseño moderno basado en utilidades.
-- **Framer Motion**: Micro-animaciones y transiciones suaves.
-- **dnd-kit**: Motor potente y accesible para el Drag & Drop.
-- **Lucide Icons**: Set de iconos elegantes y consistentes.
+- **Vite 7**: El bundle tool más moderno y rápido.
+- **React 18**: Biblioteca de UI líder para interfaces dinámicas.
+- **Tailwind CSS 3**: Diseño moderno basado en utilidades con un sistema de diseño naranja optimizado.
+- **Framer Motion**: Micro-animaciones y transiciones suaves de alta fidelidad.
+- **dnd-kit**: Motor potente y accesible para la mejor experiencia de Drag & Drop.
+- **Lucide React**: Iconografía elegante y consistente.
 
 ---
 
@@ -60,44 +62,29 @@ npm run dev
 
 ## 🧠 Arquitectura Técnica y Funcionamiento
 
-Para continuar el desarrollo, es fundamental entender cómo fluyen los datos en la aplicación:
-
 ### ⚙️ Flujo del Backend (Request Lifecycle)
 
-1.  **Definición de Rutas (`src/routes`)**:
-    Los archivos en `routes/` (ej. `boardRoutes.ts`) definen los endpoints. Casi todas las rutas están protegidas por `authenticate`.
-2.  **Middleware de Seguridad (`src/middleware/authMiddleware.ts`)**:
-    - El middleware `authenticate` verifica el JWT del header `Authorization`.
-    - Si es válido, inyecta el `userId` en el objeto de la petición (`req.userId`), transformándola en una `AuthRequest`.
-3.  **Controladores (`src/controllers`)**:
-    - Residen en `src/controllers/`. Son los encargados de la lógica de negocio.
-    - **Conexión**: Reciben el `req` (con el `userId`) y usan el cliente de **Prisma** (`src/prisma.ts`) para consultar la DB.
-    - **Validación**: Siempre verifican si el `userId` es el `ownerId` del recurso o si pertenece a la lista de `members` antes de permitir ediciones o eliminaciones.
-4.  **Base de Datos (`prisma/schema.prisma`)**:
-    Define los modelos (`Board`, `List`, `Card`, `Member`, `Comment`). Para cualquier cambio en los datos, se debe modificar este archivo y ejecutar `npx prisma db push`.
+1.  **Seguridad y Contexto**: El middleware `authenticate` procesa el JWT e inyecta el `userId` en la petición (`AuthRequest`).
+2.  **Control de Acceso**: Los controladores verifican sistemáticamente si el usuario tiene el rol necesario (Owner o Member) antes de permitir acciones CRUD.
+3.  **Modelos de Datos Relacionales**:
+    - **Boards**: Contienen listas, etiquetas (`Labels`) y miembros.
+    - **Cards**: Gestionan su orden, estado (`isDone`), fechas y etiquetas asociadas (`CardLabel`).
+    - **Labels**: Definidas a nivel de tablero para consistencia visual.
 
 ### 💻 Flujo del Frontend
 
-1.  **Servicios de API (`src/services/api.ts`)**:
-    Centraliza las peticiones usando **Axios**. Automáticamente adjunta el token JWT desde el `localStorage` en cada petición.
-2.  **Gestión de Estado (`src/context/AuthContext.tsx`)**:
-    Maneja el estado global del usuario autenticado y su perfil (incluyendo el avatar).
-3.  **Componentes y Páginas**:
-    - Las páginas (`src/pages/DashboardPage.tsx`) consumen los servicios para cargar datos.
-    - Se utilizan componentes especializados como `SortableBoard` o `SortableCard` para manejar la interactividad compleja sin sobrecargar el código de la página.
+1.  **Servicios Centralizados**: Axios gestiona la comunicación con la API, inyectando automáticamente el token desde el `localStorage`.
+2.  **Estado Global**: `AuthContext` mantiene la sesión activa y los datos del perfil del usuario.
+3.  **Componentes Especializados**: `SortableCard` y `CardDetailModal` encapsulan la lógica compleja de interacción y edición para mantener el código limpio y mantenible.
 
 ---
 
 ## 👩‍💻 Guía para Continuar el Desarrollo
 
-1.  **Añadir una nueva funcionalidad**:
-    - Define el modelo en `schema.prisma`.
-    - Crea el controlador en `src/controllers/`.
-    - Registra la ruta en `src/routes/` y asóciala al controlador.
-    - Crea el servicio y la UI en el `Front/`.
-2.  **Mantenimiento**:
-    - El proyecto usa TypeScript estricto; asegúrate de tipar correctamente todas las respuestas de la API.
-    - El diseño premium se mantiene usando clases de Tailwind específicas definidas en los componentes.
+1.  **Extender la Base de Datos**: Modifica `prisma/schema.prisma`, añade tus campos y corre `npx prisma db push`.
+2.  **Nuevos Endpoints**: Sigue el patrón `Routes -> Controller -> Prisma` para mantener la coherencia.
+3.  **Estética**: Utiliza las variables CSS definidas en `index.css` (`--accent: #f97316`) para mantener el tema naranja premium.
 
 ---
-*Desarrollado con ❤️ para ser el gestor de tareas más bonito del vecindario.*
+*Developed with the power of boredom and a cup of coffee*
+
