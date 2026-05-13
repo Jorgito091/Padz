@@ -8,6 +8,7 @@ import authRoutes from './routes/authRoutes';
 import memberRoutes from './routes/memberRoutes';
 import commentRoutes from './routes/commentRoutes';
 import labelRoutes from './routes/labelRoutes';
+import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
 
@@ -30,6 +31,8 @@ app.use('/api/labels', labelRoutes);
 app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

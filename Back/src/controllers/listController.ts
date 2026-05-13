@@ -1,85 +1,74 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware';
 import prisma from '../prisma';
+import { AppError } from '../utils/AppError';
+import { catchAsync } from '../utils/catchAsync';
 
-export const getLists = async (req: AuthRequest, res: Response) => {
+export const getLists = catchAsync(async (req: AuthRequest, res: Response) => {
     const { boardId } = req.query;
-    if (!boardId) return res.status(400).json({ error: 'boardId is required' });
+    if (!boardId) throw new AppError('boardId is required', 400);
 
-    try {
-        const board = await prisma.board.findUnique({
-            where: { id: String(boardId) }
-        });
+    const board = await prisma.board.findUnique({
+        where: { id: String(boardId) }
+    });
 
-        if (!board) return res.status(404).json({ error: 'Board not found' });
-        if (board.ownerId !== req.userId) return res.status(403).json({ error: 'Access denied' });
+    if (!board) throw new AppError('Board not found', 404);
+    if (board.ownerId !== req.userId) throw new AppError('Access denied', 403);
 
-        const lists = await prisma.list.findMany({
-            where: { boardId: String(boardId) },
-            include: { cards: { orderBy: { order: 'asc' } } },
-            orderBy: { order: 'asc' },
-        });
-        res.json(lists);
-    } catch (error) {
-        res.status(500).json({ error: 'Error fetching lists' });
-    }
-};
+    const lists = await prisma.list.findMany({
+        where: { boardId: String(boardId) },
+        include: { cards: { orderBy: { order: 'asc' } } },
+        orderBy: { order: 'asc' },
+    });
+    res.json(lists);
+});
 
-export const createList = async (req: AuthRequest, res: Response) => {
+export const createList = catchAsync(async (req: AuthRequest, res: Response) => {
     const { title, order, boardId } = req.body;
-    try {
-        const board = await prisma.board.findUnique({
-            where: { id: boardId }
-        });
+    
+    const board = await prisma.board.findUnique({
+        where: { id: boardId }
+    });
 
-        if (!board) return res.status(404).json({ error: 'Board not found' });
-        if (board.ownerId !== req.userId) return res.status(403).json({ error: 'Access denied' });
+    if (!board) throw new AppError('Board not found', 404);
+    if (board.ownerId !== req.userId) throw new AppError('Access denied', 403);
 
-        const list = await prisma.list.create({
-            data: { title, order, boardId },
-        });
-        res.status(201).json(list);
-    } catch (error) {
-        res.status(500).json({ error: 'Error creating list' });
-    }
-};
+    const list = await prisma.list.create({
+        data: { title, order, boardId },
+    });
+    res.status(201).json(list);
+});
 
-export const updateList = async (req: AuthRequest, res: Response) => {
+export const updateList = catchAsync(async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { title, order } = req.body;
-    try {
-        const list = await prisma.list.findUnique({
-            where: { id },
-            include: { board: true }
-        });
+    
+    const list = await prisma.list.findUnique({
+        where: { id },
+        include: { board: true }
+    });
 
-        if (!list) return res.status(404).json({ error: 'List not found' });
-        if (list.board.ownerId !== req.userId) return res.status(403).json({ error: 'Access denied' });
+    if (!list) throw new AppError('List not found', 404);
+    if (list.board.ownerId !== req.userId) throw new AppError('Access denied', 403);
 
-        const updatedList = await prisma.list.update({
-            where: { id },
-            data: { title, order },
-        });
-        res.json(updatedList);
-    } catch (error) {
-        res.status(500).json({ error: 'Error updating list' });
-    }
-};
+    const updatedList = await prisma.list.update({
+        where: { id },
+        data: { title, order },
+    });
+    res.json(updatedList);
+});
 
-export const deleteList = async (req: AuthRequest, res: Response) => {
+export const deleteList = catchAsync(async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
-    try {
-        const list = await prisma.list.findUnique({
-            where: { id },
-            include: { board: true }
-        });
+    
+    const list = await prisma.list.findUnique({
+        where: { id },
+        include: { board: true }
+    });
 
-        if (!list) return res.status(404).json({ error: 'List not found' });
-        if (list.board.ownerId !== req.userId) return res.status(403).json({ error: 'Access denied' });
+    if (!list) throw new AppError('List not found', 404);
+    if (list.board.ownerId !== req.userId) throw new AppError('Access denied', 403);
 
-        await prisma.list.delete({ where: { id } });
-        res.status(204).send();
-    } catch (error) {
-        res.status(500).json({ error: 'Error deleting list' });
-    }
-};
+    await prisma.list.delete({ where: { id } });
+    res.status(204).send();
+});
