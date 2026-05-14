@@ -10,6 +10,7 @@ import {
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import api from '../services/api';
+import { socketService } from '../services/socket';
 import { Board, List, Card } from '../types';
 
 export const useBoardData = (user: any) => {
@@ -62,6 +63,25 @@ export const useBoardData = (user: any) => {
             fetchBoards();
         }
     }, [user, fetchBoards]);
+
+    useEffect(() => {
+        if (!user || !selectedBoard) return;
+
+        const socket = socketService.connect();
+        
+        socket.emit('join-board', selectedBoard.id);
+
+        const handleBoardUpdated = () => {
+            fetchBoardDetail(selectedBoard.id, false);
+        };
+
+        socket.on('board-updated', handleBoardUpdated);
+
+        return () => {
+            socket.off('board-updated', handleBoardUpdated);
+            socket.emit('leave-board', selectedBoard.id);
+        };
+    }, [user, selectedBoard?.id, fetchBoardDetail]);
 
     const handleSaveBoard = async (boardForm: any, editingBoard: Board | null) => {
         if (!boardForm.title.trim()) return;

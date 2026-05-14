@@ -3,6 +3,7 @@ import { AuthRequest } from '../middleware/authMiddleware';
 import prisma from '../prisma';
 import { AppError } from '../utils/AppError';
 import { catchAsync } from '../utils/catchAsync';
+import { io } from '../server';
 
 export const getLists = catchAsync(async (req: AuthRequest, res: Response) => {
     const { boardId } = req.query;
@@ -36,6 +37,9 @@ export const createList = catchAsync(async (req: AuthRequest, res: Response) => 
     const list = await prisma.list.create({
         data: { title, order, boardId },
     });
+    
+    io.to(boardId).emit('board-updated');
+    
     res.status(201).json(list);
 });
 
@@ -55,6 +59,9 @@ export const updateList = catchAsync(async (req: AuthRequest, res: Response) => 
         where: { id },
         data: { title, order },
     });
+    
+    io.to(list.boardId).emit('board-updated');
+    
     res.json(updatedList);
 });
 
@@ -70,5 +77,8 @@ export const deleteList = catchAsync(async (req: AuthRequest, res: Response) => 
     if (list.board.ownerId !== req.userId) throw new AppError('Access denied', 403);
 
     await prisma.list.delete({ where: { id } });
+    
+    io.to(list.boardId).emit('board-updated');
+    
     res.status(204).send();
 });

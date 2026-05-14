@@ -3,6 +3,7 @@ import { AuthRequest } from '../middleware/authMiddleware';
 import prisma from '../prisma';
 import { AppError } from '../utils/AppError';
 import { catchAsync } from '../utils/catchAsync';
+import { io } from '../server';
 
 export const createCard = catchAsync(async (req: AuthRequest, res: Response) => {
     const { title, description, order, listId, dueDate, isDone } = req.body;
@@ -22,6 +23,9 @@ export const createCard = catchAsync(async (req: AuthRequest, res: Response) => 
     const card = await prisma.card.create({
         data: { title, description, order, listId, dueDate, isDone },
     });
+    
+    io.to(list.board.id).emit('board-updated');
+    
     res.status(201).json(card);
 });
 
@@ -52,6 +56,9 @@ export const updateCard = catchAsync(async (req: AuthRequest, res: Response) => 
             isDone
         }
     });
+    
+    io.to(card.list.board.id).emit('board-updated');
+    
     res.json(updatedCard);
 });
 
@@ -71,5 +78,8 @@ export const deleteCard = catchAsync(async (req: AuthRequest, res: Response) => 
     }
 
     await prisma.card.delete({ where: { id } });
+    
+    io.to(card.list.board.id).emit('board-updated');
+    
     res.status(204).send();
 });
