@@ -13,6 +13,7 @@ Padz es un gestor de tableros moderno, elegante y altamente funcional, diseñado
 - **Temas Naranja Premium**: Una interfaz oscura refinada con acentos naranja y efectos de cristal.
 
 ### 👥 Colaboración y Seguridad
+- **Tiempo Real**: Los cambios en tableros y tarjetas se reflejan instantáneamente para todos los usuarios conectados mediante WebSockets.
 - **Sistema de Miembros y Roles**: Invita colaboradores con roles específicos (`OWNER`, `MEMBER`, `VIEWER`).
 - **Acceso Protegido**: Autenticación robusta con JWT y control granular de permisos sobre cada recurso.
 - **Perfil de Usuario**: Personalización de avatares para una identificación visual rápida.
@@ -27,8 +28,9 @@ Padz es un gestor de tableros moderno, elegante y altamente funcional, diseñado
 ### Backend (Node.js)
 - **TypeScript**: Desarrollo robusto y tipado estricto.
 - **Express 5**: Framework de alto rendimiento para la API REST.
-- **Prisma 7**: ORM de última generación para una gestión de datos eficiente.
-- **SQLite**: Persistencia local rápida y optimizada.
+- **Prisma 5**: ORM de última generación para una gestión de datos eficiente.
+- **PostgreSQL & Docker**: Base de datos relacional robusta, contenida en Docker para fácil despliegue y alta concurrencia.
+- **Socket.io**: WebSockets integrados para colaboración en tiempo real.
 - **JWT & Bcryptjs**: Estándares de seguridad para autenticación y cifrado de datos.
 
 ### Frontend (React)
@@ -43,11 +45,15 @@ Padz es un gestor de tableros moderno, elegante y altamente funcional, diseñado
 
 ## 🚀 Guía de Instalación
 
-### 1. Backend (API)
+### 1. Backend (API y Base de Datos)
 ```bash
+# Levantar el contenedor de PostgreSQL (desde la raíz del proyecto)
+docker-compose up -d
+
+# Instalar y arrancar el servidor
 cd Back
 npm install
-npx prisma db push
+npx prisma migrate dev
 npm run dev
 ```
 
@@ -81,7 +87,7 @@ npm run dev
 
 ## 👩‍💻 Guía para Continuar el Desarrollo
 
-1.  **Extender la Base de Datos**: Modifica `prisma/schema.prisma`, añade tus campos y corre `npx prisma db push`.
+1.  **Extender la Base de Datos**: Modifica `prisma/schema.prisma`, añade tus campos y corre `npx prisma migrate dev`.
 2.  **Nuevos Endpoints**: Sigue el patrón `Routes -> Controller -> Prisma` para mantener la coherencia.
 3.  **Estética**: Utiliza las variables CSS definidas en `index.css` (`--accent: #f97316`) para mantener el tema naranja premium.
 
