@@ -23,6 +23,7 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
     const [isPostingComment, setIsPostingComment] = useState(false);
 
     const [isLabelPickerOpen, setIsLabelPickerOpen] = useState(false);
+    const [isMemberPickerOpen, setIsMemberPickerOpen] = useState(false);
     const [newLabelForm, setNewLabelForm] = useState({ name: '', color: '#f97316' });
     const [isCreatingLabel, setIsCreatingLabel] = useState(false);
 
@@ -116,6 +117,28 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
         }
     };
 
+    const handleAssignUser = async (userId: string) => {
+        if (card.assignees?.some(a => a.user.id === userId)) {
+            handleUnassignUser(userId);
+            return;
+        }
+        try {
+            await api.post('/cards/assign', { cardId: card.id, userId });
+            onUpdate();
+        } catch (error) {
+            console.error('Error assigning user:', error);
+        }
+    };
+
+    const handleUnassignUser = async (userId: string) => {
+        try {
+            await api.delete(`/cards/unassign/${card.id}/${userId}`);
+            onUpdate();
+        } catch (error) {
+            console.error('Error unassigning user:', error);
+        }
+    };
+
     const handleCreateLabel = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newLabelForm.name.trim()) return;
@@ -180,16 +203,55 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
                                     className="w-full bg-transparent border-none p-0 text-3xl font-black text-white focus:ring-0 placeholder:text-white/20 transition-all mb-2"
                                     placeholder="Título de la tarjeta..."
                                 />
-                                <div className="flex flex-wrap gap-2">
-                                    {card.labels?.map((l) => (
-                                        <div
-                                            key={l.label.id}
-                                            className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border shadow-sm"
-                                            style={{ backgroundColor: `${l.label.color}15`, borderColor: `${l.label.color}40`, color: l.label.color }}
-                                        >
-                                            {l.label.name}
+                                <div className="flex flex-wrap gap-4 items-center">
+                                    {card.assignees && card.assignees.length > 0 && (
+                                        <div className="flex flex-col gap-2">
+                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Miembros</span>
+                                            <div className="flex -space-x-2">
+                                                {card.assignees.map((a) => (
+                                                    <div 
+                                                        key={a.user.id}
+                                                        title={a.user.name}
+                                                        className="w-8 h-8 rounded-full border-2 border-[#141416] bg-white/10 overflow-hidden"
+                                                    >
+                                                        {a.user.avatar ? (
+                                                            <img src={a.user.avatar} className="w-full h-full object-cover" alt="" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-gray-400">
+                                                                {a.user.name.charAt(0).toUpperCase()}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                                <button 
+                                                    onClick={() => setIsMemberPickerOpen(!isMemberPickerOpen)}
+                                                    className="w-8 h-8 rounded-full border-2 border-[#141416] bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-500 transition-colors"
+                                                >
+                                                    <Plus size={14} />
+                                                </button>
+                                            </div>
                                         </div>
-                                    ))}
+                                    )}
+                                    <div className="flex flex-col gap-2">
+                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Etiquetas</span>
+                                        <div className="flex flex-wrap gap-2">
+                                            {card.labels?.map((l) => (
+                                                <div
+                                                    key={l.label.id}
+                                                    className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-2 border shadow-sm"
+                                                    style={{ backgroundColor: `${l.label.color}15`, borderColor: `${l.label.color}40`, color: l.label.color }}
+                                                >
+                                                    {l.label.name}
+                                                </div>
+                                            ))}
+                                            <button 
+                                                onClick={() => setIsLabelPickerOpen(!isLabelPickerOpen)}
+                                                className="px-2 py-1 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 text-gray-500 transition-colors"
+                                            >
+                                                <Plus size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -272,59 +334,102 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
                                 <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Acciones</h4>
 
                                 <div className="space-y-2">
-                                    <button
-                                        onClick={() => setIsLabelPickerOpen(!isLabelPickerOpen)}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-bold border ${isLabelPickerOpen ? 'bg-orange-600 text-white border-orange-500 shadow-lg shadow-orange-900/20' : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-white'}`}
-                                    >
-                                        <Logo size={16} /> Etiquetas
-                                    </button>
-
-                                    <AnimatePresence>
-                                        {isLabelPickerOpen && (
-                                            <motion.div
-                                                initial={{ opacity: 0, scale: 0.9 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                exit={{ opacity: 0, scale: 0.9 }}
-                                                className="bg-[#1a1a1c] border border-white/10 rounded-2xl p-4 shadow-2xl relative z-20 space-y-4"
-                                            >
-                                                <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
-                                                    {board.labels?.map(label => (
-                                                        <div
-                                                            key={label.id}
-                                                            onClick={() => handleAssignLabel(label.id)}
-                                                            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all ${card.labels?.some(l => l.label.id === label.id) ? 'bg-orange-600 shadow-lg' : 'hover:bg-white/5'}`}
-                                                        >
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: label.color }} />
-                                                                <span className="text-xs font-bold truncate max-w-[100px]">{label.name}</span>
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => setIsMemberPickerOpen(!isMemberPickerOpen)}
+                                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-bold border ${isMemberPickerOpen ? 'bg-orange-600 text-white border-orange-500 shadow-lg shadow-orange-900/20' : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-white'}`}
+                                        >
+                                            <Mail size={16} /> Miembros
+                                        </button>
+                                        <AnimatePresence>
+                                            {isMemberPickerOpen && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, scale: 0.9 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    exit={{ opacity: 0, scale: 0.9 }}
+                                                    className="absolute left-0 right-0 mt-2 bg-[#1a1a1c] border border-white/10 rounded-2xl p-4 shadow-2xl z-50 space-y-2"
+                                                >
+                                                    <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1">
+                                                        {board.members?.map(member => (
+                                                            <div
+                                                                key={member.user.id}
+                                                                onClick={() => handleAssignUser(member.user.id)}
+                                                                className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all ${card.assignees?.some(a => a.user.id === member.user.id) ? 'bg-orange-600 text-white shadow-lg' : 'hover:bg-white/5 text-gray-400 hover:text-white'}`}
+                                                            >
+                                                                <div className="w-6 h-6 rounded-full bg-white/10 overflow-hidden shrink-0">
+                                                                    {member.user.avatar ? (
+                                                                        <img src={member.user.avatar} className="w-full h-full object-cover" alt="" />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center text-[8px] font-bold">
+                                                                            {member.user.name.charAt(0).toUpperCase()}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-xs font-bold truncate">{member.user.name}</span>
+                                                                {card.assignees?.some(a => a.user.id === member.user.id) && <Check size={12} className="ml-auto" />}
                                                             </div>
-                                                            <button onClick={(e) => handleDeleteLabel(e, label.id)} className="p-1 hover:text-red-400">
-                                                                <Trash2 size={10} />
-                                                            </button>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                <div className="pt-2 border-t border-white/5">
-                                                    <div className="flex items-center gap-2">
-                                                        <input
-                                                            type="text"
-                                                            value={newLabelForm.name}
-                                                            onChange={(e) => setNewLabelForm({ ...newLabelForm, name: e.target.value })}
-                                                            placeholder="Nueva..."
-                                                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[10px] focus:ring-1 focus:ring-orange-500"
-                                                        />
-                                                        <input
-                                                            type="color"
-                                                            value={newLabelForm.color}
-                                                            onChange={(e) => setNewLabelForm({ ...newLabelForm, color: e.target.value })}
-                                                            className="w-6 h-6 rounded border-none bg-transparent cursor-pointer"
-                                                        />
-                                                        <button onClick={handleCreateLabel} className="p-1 bg-orange-600 rounded-lg"><Plus size={14} /></button>
+                                                        ))}
                                                     </div>
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => setIsLabelPickerOpen(!isLabelPickerOpen)}
+                                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-bold border ${isLabelPickerOpen ? 'bg-orange-600 text-white border-orange-500 shadow-lg shadow-orange-900/20' : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-white'}`}
+                                        >
+                                            <Logo size={16} /> Etiquetas
+                                        </button>
+
+                                        <AnimatePresence>
+                                            {isLabelPickerOpen && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, scale: 0.9 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    exit={{ opacity: 0, scale: 0.9 }}
+                                                    className="absolute left-0 right-0 mt-2 bg-[#1a1a1c] border border-white/10 rounded-2xl p-4 shadow-2xl z-50 space-y-4"
+                                                >
+                                                    <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
+                                                        {board.labels?.map(label => (
+                                                            <div
+                                                                key={label.id}
+                                                                onClick={() => handleAssignLabel(label.id)}
+                                                                className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all ${card.labels?.some(l => l.label.id === label.id) ? 'bg-orange-600 shadow-lg' : 'hover:bg-white/5'}`}
+                                                            >
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: label.color }} />
+                                                                    <span className="text-xs font-bold truncate max-w-[100px]">{label.name}</span>
+                                                                </div>
+                                                                <button onClick={(e) => handleDeleteLabel(e, label.id)} className="p-1 hover:text-red-400">
+                                                                    <Trash2 size={10} />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    <div className="pt-2 border-t border-white/5">
+                                                        <div className="flex items-center gap-2">
+                                                            <input
+                                                                type="text"
+                                                                value={newLabelForm.name}
+                                                                onChange={(e) => setNewLabelForm({ ...newLabelForm, name: e.target.value })}
+                                                                placeholder="Nueva..."
+                                                                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[10px] focus:ring-1 focus:ring-orange-500"
+                                                            />
+                                                            <input
+                                                                type="color"
+                                                                value={newLabelForm.color}
+                                                                onChange={(e) => setNewLabelForm({ ...newLabelForm, color: e.target.value })}
+                                                                className="w-6 h-6 rounded border-none bg-transparent cursor-pointer"
+                                                            />
+                                                            <button onClick={handleCreateLabel} className="p-1 bg-orange-600 rounded-lg"><Plus size={14} /></button>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
                                 </div>
                             </div>
 

@@ -29,6 +29,24 @@ class SocketService {
     getSocket() {
         return this.socket;
     }
+
+    joinUser(userId: string) {
+        if (this.socket) {
+            this.socket.emit('join-user', userId);
+        }
+    }
+
+    joinBoard(boardId: string) {
+        if (this.socket) {
+            this.socket.emit('join-board', boardId);
+        }
+    }
+
+    leaveBoard(boardId: string) {
+        if (this.socket) {
+            this.socket.emit('leave-board', boardId);
+        }
+    }
 }
 
 export const socketService = new SocketService();

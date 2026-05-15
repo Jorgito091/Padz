@@ -83,3 +83,70 @@ export const deleteCard = catchAsync(async (req: AuthRequest, res: Response) => 
     
     res.status(204).send();
 });
+
+export const assignUser = catchAsync(async (req: AuthRequest, res: Response) => {
+    const { cardId, userId } = req.body;
+
+    const card = await prisma.card.findUnique({
+        where: { id: cardId },
+        include: { list: { include: { board: { include: { members: true } } } } }
+    });
+
+    if (!card) throw new AppError('Card not found', 404);
+
+    const isMember = card.list.board.members.some((m: any) => m.userId === req.userId);
+    if (card.list.board.ownerId !== req.userId && !isMember) {
+        throw new AppError('Access denied', 403);
+    }
+
+    const assignment = await prisma.cardAssignee.create({
+        data: { cardId, userId },
+        include: { user: { select: { name: true } } }
+    });
+
+    // Create notification if assigning someone else
+    if (userId !== req.userId) {
+        const notification = await prisma.notification.create({
+            data: {
+                userId,
+                type: 'CARD_ASSIGNED',
+                payload: {
+                    cardId,
+                    cardTitle: card.title,
+                    boardId: card.list.boardId,
+                    assignedBy: req.userId
+                }
+            }
+        });
+        io.to(userId).emit('notification', notification);
+    }
+
+    io.to(card.list.boardId).emit('board-updated');
+    res.status(201).json(assignment);
+});
+
+export const unassignUser = catchAsync(async (req: AuthRequest, res: Response) => {
+    const { cardId, userId } = req.params;
+
+    const card = await prisma.card.findUnique({
+        where: { id: cardId },
+        include: { list: { include: { board: { include: { members: true } } } } }
+    });
+
+    if (!card) throw new AppError('Card not found', 404);
+
+    const isMember = card.list.board.members.some((m: any) => m.userId === req.userId);
+    if (card.list.board.ownerId !== req.userId && !isMember) {
+        throw new AppError('Access denied', 403);
+    }
+
+    await prisma.cardAssignee.delete({
+        where: {
+            cardId_userId: { cardId, userId }
+        }
+    });
+
+    io.to(card.list.boardId).emit('board-updated');
+    res.status(204).send();
+});
+

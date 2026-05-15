@@ -35,6 +35,8 @@ import { ProfileModal } from '../components/modals/ProfileModal';
 import { CreateBoardModal } from '../components/modals/CreateBoardModal';
 import { BoardView } from '../components/board/BoardView';
 
+import { NotificationPanel } from '../components/NotificationPanel';
+
 // Hooks
 import { useBoardData } from '../hooks/useBoardData';
 
@@ -137,6 +139,7 @@ const DashboardPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
+                    <NotificationPanel />
                     <div className="flex flex-col items-end hidden sm:flex">
                         <span className="text-sm font-semibold text-white">{user?.name}</span>
                     </div>

@@ -12,11 +12,12 @@ interface CardProps {
     onEdit?: () => void;
     onDelete?: () => void;
     labels?: { label: { color: string, name: string } }[];
+    assignees?: { user: { id: string, name: string, avatar?: string } }[];
     dueDate?: string;
     isDone?: boolean;
 }
 
-export const SortableCard: React.FC<CardProps> = ({ id, title, description, onClick, onEdit, onDelete, labels, dueDate, isDone }) => {
+export const SortableCard: React.FC<CardProps> = ({ id, title, description, onClick, onEdit, onDelete, labels, assignees, dueDate, isDone }) => {
     const {
         attributes,
         listeners,
@@ -59,19 +60,41 @@ export const SortableCard: React.FC<CardProps> = ({ id, title, description, onCl
                             <div className="text-xs text-gray-500 mt-2 line-clamp-2">{description}</div>
                         )}
 
-                        {dueDate && (
-                            <div className={`mt-3 flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm w-fit transition-all ${isDone
-                                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                : new Date(dueDate) < new Date()
-                                    ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                                    : new Date(dueDate).getTime() - new Date().getTime() < 86400000
-                                        ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                                        : 'bg-white/5 text-gray-400 border border-white/10'
-                                }`}>
-                                {isDone ? <CheckCircle2 size={10} /> : <Clock size={10} />}
-                                <span>{new Date(dueDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
+                        <div className="flex items-center justify-between mt-3">
+                            <div className="flex items-center gap-2">
+                                {dueDate && (
+                                    <div className={`flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm transition-all ${isDone
+                                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                        : new Date(dueDate) < new Date()
+                                            ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                            : new Date(dueDate).getTime() - new Date().getTime() < 86400000
+                                                ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                                                : 'bg-white/5 text-gray-400 border border-white/10'
+                                        }`}>
+                                        {isDone ? <CheckCircle2 size={10} /> : <Clock size={10} />}
+                                        <span>{new Date(dueDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
+                                    </div>
+                                )}
                             </div>
-                        )}
+
+                            <div className="flex -space-x-1.5">
+                                {assignees?.map((a, i) => (
+                                    <div 
+                                        key={i} 
+                                        title={a.user.name}
+                                        className="w-5 h-5 rounded-full border border-[#1a1a1c] bg-white/10 overflow-hidden shadow-sm"
+                                    >
+                                        {a.user.avatar ? (
+                                            <img src={a.user.avatar} className="w-full h-full object-cover" alt="" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-[7px] font-bold text-gray-400">
+                                                {a.user.name.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
                     {!isDragging && (onEdit || onDelete) && (
@@ -99,3 +122,4 @@ export const SortableCard: React.FC<CardProps> = ({ id, title, description, onCl
         </div>
     );
 };
+

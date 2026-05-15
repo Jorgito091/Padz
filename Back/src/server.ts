@@ -10,6 +10,7 @@ import authRoutes from './routes/authRoutes';
 import memberRoutes from './routes/memberRoutes';
 import commentRoutes from './routes/commentRoutes';
 import labelRoutes from './routes/labelRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -38,6 +39,11 @@ io.on("connection", (socket: Socket) => {
         console.log(`Socket ${socket.id} left board ${boardId}`);
     });
 
+    socket.on("join-user", (userId: string) => {
+        socket.join(userId);
+        console.log(`Socket ${socket.id} joined user room ${userId}`);
+    });
+
     socket.on("disconnect", () => {
         console.log(`Socket disconnected: ${socket.id}`);
     });
@@ -54,6 +60,7 @@ app.use('/api/cards', cardRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/labels', labelRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 
 app.get('/health', (req, res) => {

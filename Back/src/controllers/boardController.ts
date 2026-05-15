@@ -21,6 +21,17 @@ export const getBoards = catchAsync(async (req: AuthRequest, res: Response) => {
                                 include: {
                                     label: true
                                 }
+                            },
+                            assignees: {
+                                include: {
+                                    user: {
+                                        select: {
+                                            id: true,
+                                            name: true,
+                                            avatar: true
+                                        }
+                                    }
+                                }
                             }
                         },
                         orderBy: { order: 'asc' }
@@ -94,6 +105,17 @@ export const getBoardById = catchAsync(async (req: AuthRequest, res: Response) =
                             labels: {
                                 include: {
                                     label: true
+                                }
+                            },
+                            assignees: {
+                                include: {
+                                    user: {
+                                        select: {
+                                            id: true,
+                                            name: true,
+                                            avatar: true
+                                        }
+                                    }
                                 }
                             }
                         },

@@ -10,4 +10,7 @@ router.post('/', cardController.createCard);
 router.put('/:id', cardController.updateCard);
 router.delete('/:id', cardController.deleteCard);
 
+router.post('/assign', cardController.assignUser);
+router.delete('/unassign/:cardId/:userId', cardController.unassignUser);
+
 export default router;

@@ -5,6 +5,22 @@ export interface LabelData {
     boardId: string;
 }
 
+export interface User {
+    id: string;
+    email: string;
+    name: string;
+    avatar?: string;
+}
+
+export interface Notification {
+    id: string;
+    userId: string;
+    type: string;
+    payload: any;
+    read: boolean;
+    createdAt: string;
+}
+
 export interface CommentData {
     id: string;
     text: string;
@@ -25,6 +41,13 @@ export interface Card {
     comments?: CommentData[];
     labels?: {
         label: LabelData;
+    }[];
+    assignees?: {
+        user: {
+            id: string;
+            name: string;
+            avatar?: string;
+        };
     }[];
     dueDate?: string;
     isDone?: boolean;

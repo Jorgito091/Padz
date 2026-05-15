@@ -123,6 +123,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                                         onEdit={() => onEditCard(card)}
                                         onDelete={() => onDeleteCard(card.id, list.id)}
                                         labels={card.labels}
+                                        assignees={card.assignees}
                                         dueDate={card.dueDate}
                                         isDone={card.isDone}
                                     />
