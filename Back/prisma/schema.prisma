@@ -18,6 +18,8 @@ model User {
   boards      Board[]
   memberships BoardMember[]
   comments    Comment[]
+  notifications Notification[]
+  cardAssignees CardAssignee[]
 }
 
 model Board {
@@ -61,6 +63,7 @@ model Card {
   labels      CardLabel[]
   dueDate     DateTime?
   isDone      Boolean     @default(false)
+  assignees   CardAssignee[]
 }
 
 model Label {
@@ -92,6 +95,25 @@ model BoardMember {
   board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
   @@unique([userId, boardId])
+}
+
+model CardAssignee {
+  cardId String
+  userId String
+  card   Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([cardId, userId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  payload   Json
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Comment {
