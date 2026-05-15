@@ -237,6 +237,14 @@ const DashboardPage: React.FC = () => {
                             onSave={handleSaveBoardSubmit}
                         />
                     )}
+                    {isMembersModalOpen && selectedBoard && (
+                        <MembersModal
+                            board={selectedBoard}
+                            user={user}
+                            onClose={() => setIsMembersModalOpen(false)}
+                            onUpdate={() => fetchBoardDetail(selectedBoard.id)}
+                        />
+                    )}
                     {editingCard && selectedBoard && (
                         <CardDetailModal
                             card={editingCard}
