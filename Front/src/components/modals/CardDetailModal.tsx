@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Trash2, Send, Pencil, Mail, Check } from 'lucide-react';
 import { Card, Board, CommentData, LabelData } from '../../types';
 import api from '../../services/api';
+import Logo from '../Logo';
 
 interface CardDetailModalProps {
     card: Card;
@@ -520,12 +521,3 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
     );
 };
 
-// Simple Logo component for the design (defined here for simplicity or imported)
-const Logo: React.FC<{ size?: number }> = ({ size = 24 }) => (
-    <div
-        className="relative flex items-center justify-center font-black italic bg-orange-600 text-white rounded-lg shadow-lg shadow-orange-950/40 select-none animate-pulse-slow"
-        style={{ width: size, height: size, fontSize: size * 0.6 }}
-    >
-        P
-    </div>
-);

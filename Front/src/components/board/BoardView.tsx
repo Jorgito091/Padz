@@ -16,6 +16,8 @@ import {
 import { Plus, Trash2, X } from 'lucide-react';
 import { Board, Card } from '../../types';
 import { SortableCard } from '../SortableCard';
+import { useAuth } from '../../context/AuthContext';
+import Logo from '../Logo';
 
 interface BoardViewProps {
     board: Board;
