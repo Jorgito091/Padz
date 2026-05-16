@@ -1,3 +1,4 @@
+import { Router } from 'express';
 import { addMember, getBoardMembers, removeMember, updateMemberRole } from '../controllers/memberController';
 import { authenticate } from '../middleware/authMiddleware';
 
