@@ -51,7 +51,12 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
         }
     };
 
+    const userRole = board.members?.find(m => m.userId === user?.id)?.role;
+    const isOwner = board.ownerId === user?.id;
+    const canEdit = isOwner || userRole === 'MEMBER';
+
     const handleUpdate = async (e?: React.FormEvent) => {
+        if (!canEdit) return;
         if (e) e.preventDefault();
         try {
             await api.put(`/cards/${card.id}`, {
@@ -197,10 +202,11 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
                             <div>
                                 <input
                                     type="text"
+                                    readOnly={!canEdit}
                                     value={editTitle}
                                     onBlur={() => handleUpdate()}
                                     onChange={(e) => setEditTitle(e.target.value)}
-                                    className="w-full bg-transparent border-none p-0 text-3xl font-black text-white focus:ring-0 placeholder:text-white/20 transition-all mb-2"
+                                    className={`w-full bg-transparent border-none p-0 text-3xl font-black text-white focus:ring-0 placeholder:text-white/20 transition-all mb-2 ${!canEdit ? 'cursor-default' : ''}`}
                                     placeholder="Título de la tarjeta..."
                                 />
                                 <div className="flex flex-wrap gap-4 items-center">
@@ -223,12 +229,14 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
                                                         )}
                                                     </div>
                                                 ))}
-                                                <button 
-                                                    onClick={() => setIsMemberPickerOpen(!isMemberPickerOpen)}
-                                                    className="w-8 h-8 rounded-full border-2 border-[#141416] bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-500 transition-colors"
-                                                >
-                                                    <Plus size={14} />
-                                                </button>
+                                                {canEdit && (
+                                                    <button 
+                                                        onClick={() => setIsMemberPickerOpen(!isMemberPickerOpen)}
+                                                        className="w-8 h-8 rounded-full border-2 border-[#141416] bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-500 transition-colors"
+                                                    >
+                                                        <Plus size={14} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -244,12 +252,14 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
                                                     {l.label.name}
                                                 </div>
                                             ))}
-                                            <button 
-                                                onClick={() => setIsLabelPickerOpen(!isLabelPickerOpen)}
-                                                className="px-2 py-1 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 text-gray-500 transition-colors"
-                                            >
-                                                <Plus size={14} />
-                                            </button>
+                                            {canEdit && (
+                                                <button 
+                                                    onClick={() => setIsLabelPickerOpen(!isLabelPickerOpen)}
+                                                    className="px-2 py-1 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 text-gray-500 transition-colors"
+                                                >
+                                                    <Plus size={14} />
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -261,11 +271,12 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
                                     <Logo size={16} /> Descripción
                                 </label>
                                 <textarea
+                                    readOnly={!canEdit}
                                     value={editDescription}
                                     onBlur={() => handleUpdate()}
                                     onChange={(e) => setEditDescription(e.target.value)}
-                                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl p-4 text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500/20 h-40 resize-none transition-all placeholder:text-gray-600 leading-relaxed"
-                                    placeholder="Añade una descripción más detallada sobre esta tarea..."
+                                    className={`w-full bg-white/[0.03] border border-white/5 rounded-2xl p-4 text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500/20 h-40 resize-none transition-all placeholder:text-gray-600 leading-relaxed ${!canEdit ? 'cursor-default' : ''}`}
+                                    placeholder={canEdit ? "Añade una descripción más detallada sobre esta tarea..." : "Sin descripción."}
                                 />
                             </div>
 
@@ -440,13 +451,15 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
                                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Vencimiento</label>
                                         <input
                                             type="datetime-local"
+                                            readOnly={!canEdit}
                                             value={editDueDate}
                                             onChange={(e) => {
+                                                if (!canEdit) return;
                                                 setEditDueDate(e.target.value);
                                                 // Handle update after state change
                                                 setTimeout(() => handleUpdate(), 100);
                                             }}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl p-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-orange-500/40"
+                                            className={`w-full bg-white/5 border border-white/10 rounded-xl p-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-orange-500/40 ${!canEdit ? 'cursor-default opacity-50' : ''}`}
                                         />
                                     </div>
 
@@ -454,6 +467,7 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
                                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">¿Terminado?</span>
                                         <button
                                             onClick={() => {
+                                                if (!canEdit) return;
                                                 const newVal = !editIsDone;
                                                 setEditIsDone(newVal);
                                                 // Trigger update via a temporary state or direct call
@@ -468,7 +482,7 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
                                                     }).then(() => onUpdate());
                                                 }, 100);
                                             }}
-                                            className={`w-12 h-6 rounded-full transition-all relative border ${editIsDone ? 'bg-green-500 border-green-400' : 'bg-white/5 border-white/10'}`}
+                                            className={`w-12 h-6 rounded-full transition-all relative border ${editIsDone ? 'bg-green-500 border-green-400' : 'bg-white/5 border-white/10'} ${!canEdit ? 'cursor-default' : ''}`}
                                         >
                                             <div className={`absolute top-1 w-3.5 h-3.5 rounded-full bg-white transition-all shadow-md ${editIsDone ? 'left-7' : 'left-1'}`} />
                                         </button>
@@ -481,19 +495,21 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
 
                 {/* Bottom Bar Actions */}
                 <div className="px-8 py-6 border-t border-white/5 bg-white/[0.02] flex justify-between items-center">
-                    <button
-                        onClick={() => {
-                            if (window.confirm('¿Eliminar esta tarjeta definitivamente?')) {
-                                api.delete(`/cards/${card.id}`).then(() => {
-                                    onUpdate();
-                                    onClose();
-                                });
-                            }
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 hover:bg-red-500/10 text-red-400 hover:text-red-300 rounded-xl text-xs font-bold transition-all border border-transparent hover:border-red-500/20"
-                    >
-                        <Trash2 size={16} /> Eliminar Tarjeta
-                    </button>
+                    {canEdit && (
+                        <button
+                            onClick={() => {
+                                if (window.confirm('¿Eliminar esta tarjeta definitivamente?')) {
+                                    api.delete(`/cards/${card.id}`).then(() => {
+                                        onUpdate();
+                                        onClose();
+                                    });
+                                }
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 hover:bg-red-500/10 text-red-400 hover:text-red-300 rounded-xl text-xs font-bold transition-all border border-transparent hover:border-red-500/20"
+                        >
+                            <Trash2 size={16} /> Eliminar Tarjeta
+                        </button>
+                    )}
                     <div className="flex gap-3">
                         <button onClick={onClose} className="px-6 py-2 hover:bg-white/5 text-gray-400 font-bold rounded-xl text-xs transition-all">Cancelar</button>
                         <button onClick={() => { handleUpdate(); onClose(); }} className="px-8 py-2 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl text-xs transition-all shadow-lg shadow-orange-950/20">Listo</button>

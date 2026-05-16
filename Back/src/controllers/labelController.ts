@@ -22,8 +22,9 @@ export const createLabel = catchAsync(async (req: AuthRequest, res: Response) =>
 
     if (!board) throw new AppError('Board not found', 404);
 
-    const isMember = board.members.some((m: any) => m.userId === req.userId);
-    if (board.ownerId !== req.userId && !isMember) throw new AppError('Access denied', 403);
+    const member = board.members.find((m: any) => m.userId === req.userId);
+    const isOwner = board.ownerId === req.userId;
+    if (!isOwner && (!member || member.role !== 'MEMBER')) throw new AppError('Access denied', 403);
 
     const label = await prisma.label.create({
         data: { name, color, boardId },
@@ -41,8 +42,9 @@ export const deleteLabel = catchAsync(async (req: AuthRequest, res: Response) =>
 
     if (!label) throw new AppError('Label not found', 404);
 
-    const isMember = label.board.members.some((m: any) => m.userId === req.userId);
-    if (label.board.ownerId !== req.userId && !isMember) throw new AppError('Access denied', 403);
+    const member = label.board.members.find((m: any) => m.userId === req.userId);
+    const isOwner = label.board.ownerId === req.userId;
+    if (!isOwner && (!member || member.role !== 'MEMBER')) throw new AppError('Access denied', 403);
 
     await prisma.label.delete({ where: { id } });
     res.status(204).send();
@@ -57,8 +59,9 @@ export const addLabelToCard = catchAsync(async (req: AuthRequest, res: Response)
     });
 
     if (!card) throw new AppError('Card not found', 404);
-    const isMember = card.list.board.members.some((m: any) => m.userId === req.userId);
-    if (card.list.board.ownerId !== req.userId && !isMember) throw new AppError('Access denied', 403);
+    const member = card.list.board.members.find((m: any) => m.userId === req.userId);
+    const isOwner = card.list.board.ownerId === req.userId;
+    if (!isOwner && (!member || member.role !== 'MEMBER')) throw new AppError('Access denied', 403);
 
     const cardLabel = await prisma.cardLabel.create({
         data: { cardId, labelId }
@@ -75,8 +78,9 @@ export const removeLabelFromCard = catchAsync(async (req: AuthRequest, res: Resp
     });
 
     if (!card) throw new AppError('Card not found', 404);
-    const isMember = card.list.board.members.some((m: any) => m.userId === req.userId);
-    if (card.list.board.ownerId !== req.userId && !isMember) throw new AppError('Access denied', 403);
+    const member = card.list.board.members.find((m: any) => m.userId === req.userId);
+    const isOwner = card.list.board.ownerId === req.userId;
+    if (!isOwner && (!member || member.role !== 'MEMBER')) throw new AppError('Access denied', 403);
 
     await prisma.cardLabel.delete({
         where: {

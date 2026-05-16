@@ -115,3 +115,42 @@ export const removeMember = catchAsync(async (req: AuthRequest, res: Response) =
 
     res.json({ message: 'Member removed successfully' });
 });
+
+export const updateMemberRole = catchAsync(async (req: AuthRequest, res: Response) => {
+    const { boardId, userId, role } = req.body;
+
+    if (!req.userId) throw new AppError('Unauthorized', 401);
+
+    const board = await prisma.board.findUnique({
+        where: { id: boardId }
+    });
+
+    if (!board) throw new AppError('Board not found', 404);
+
+    // Only owner can change roles
+    if (board.ownerId !== req.userId) {
+        throw new AppError('Only the board owner can manage member roles', 403);
+    }
+
+    const updatedMember = await prisma.boardMember.update({
+        where: {
+            userId_boardId: {
+                userId,
+                boardId
+            }
+        },
+        data: { role },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    avatar: true
+                }
+            }
+        }
+    });
+
+    res.json(updatedMember);
+});

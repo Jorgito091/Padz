@@ -15,9 +15,10 @@ export const createCard = catchAsync(async (req: AuthRequest, res: Response) => 
 
     if (!list) throw new AppError('List not found', 404);
 
-    const isMember = list.board.members.some((m: any) => m.userId === req.userId);
-    if (list.board.ownerId !== req.userId && !isMember) {
-        throw new AppError('Access denied', 403);
+    const member = list.board.members.find((m: any) => m.userId === req.userId);
+    const isOwner = list.board.ownerId === req.userId;
+    if (!isOwner && (!member || member.role !== 'MEMBER')) {
+        throw new AppError('Access denied. Guests cannot create cards.', 403);
     }
 
     const card = await prisma.card.create({
@@ -40,9 +41,10 @@ export const updateCard = catchAsync(async (req: AuthRequest, res: Response) => 
 
     if (!card) throw new AppError('Card not found', 404);
 
-    const isMember = card.list.board.members.some((m: any) => m.userId === req.userId);
-    if (card.list.board.ownerId !== req.userId && !isMember) {
-        throw new AppError('Access denied', 403);
+    const member = (card?.list || list).board.members.find((m: any) => m.userId === req.userId);
+    const isOwner = (card?.list || list).board.ownerId === req.userId;
+    if (!isOwner && (!member || member.role !== 'MEMBER')) {
+        throw new AppError('Access denied. Insufficient permissions.', 403);
     }
 
     const updatedCard = await prisma.card.update({
@@ -72,9 +74,10 @@ export const deleteCard = catchAsync(async (req: AuthRequest, res: Response) => 
 
     if (!card) throw new AppError('Card not found', 404);
 
-    const isMember = card.list.board.members.some((m: any) => m.userId === req.userId);
-    if (card.list.board.ownerId !== req.userId && !isMember) {
-        throw new AppError('Access denied', 403);
+    const member = (card?.list || list).board.members.find((m: any) => m.userId === req.userId);
+    const isOwner = (card?.list || list).board.ownerId === req.userId;
+    if (!isOwner && (!member || member.role !== 'MEMBER')) {
+        throw new AppError('Access denied. Insufficient permissions.', 403);
     }
 
     await prisma.card.delete({ where: { id } });
@@ -94,9 +97,10 @@ export const assignUser = catchAsync(async (req: AuthRequest, res: Response) => 
 
     if (!card) throw new AppError('Card not found', 404);
 
-    const isMember = card.list.board.members.some((m: any) => m.userId === req.userId);
-    if (card.list.board.ownerId !== req.userId && !isMember) {
-        throw new AppError('Access denied', 403);
+    const member = (card?.list || list).board.members.find((m: any) => m.userId === req.userId);
+    const isOwner = (card?.list || list).board.ownerId === req.userId;
+    if (!isOwner && (!member || member.role !== 'MEMBER')) {
+        throw new AppError('Access denied. Insufficient permissions.', 403);
     }
 
     const assignment = await prisma.cardAssignee.create({
@@ -135,9 +139,10 @@ export const unassignUser = catchAsync(async (req: AuthRequest, res: Response) =
 
     if (!card) throw new AppError('Card not found', 404);
 
-    const isMember = card.list.board.members.some((m: any) => m.userId === req.userId);
-    if (card.list.board.ownerId !== req.userId && !isMember) {
-        throw new AppError('Access denied', 403);
+    const member = (card?.list || list).board.members.find((m: any) => m.userId === req.userId);
+    const isOwner = (card?.list || list).board.ownerId === req.userId;
+    if (!isOwner && (!member || member.role !== 'MEMBER')) {
+        throw new AppError('Access denied. Insufficient permissions.', 403);
     }
 
     await prisma.cardAssignee.delete({

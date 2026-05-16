@@ -28,11 +28,17 @@ export const createList = catchAsync(async (req: AuthRequest, res: Response) => 
     const { title, order, boardId } = req.body;
     
     const board = await prisma.board.findUnique({
-        where: { id: boardId }
+        where: { id: boardId },
+        include: { members: true }
     });
 
     if (!board) throw new AppError('Board not found', 404);
-    if (board.ownerId !== req.userId) throw new AppError('Access denied', 403);
+    
+    const member = board.members.find((m: any) => m.userId === req.userId);
+    const isOwner = board.ownerId === req.userId;
+    if (!isOwner && (!member || member.role !== 'MEMBER')) {
+        throw new AppError('Access denied', 403);
+    }
 
     const list = await prisma.list.create({
         data: { title, order, boardId },
@@ -49,11 +55,13 @@ export const updateList = catchAsync(async (req: AuthRequest, res: Response) => 
     
     const list = await prisma.list.findUnique({
         where: { id },
-        include: { board: true }
+        include: { board: { include: { members: true } } }
     });
 
     if (!list) throw new AppError('List not found', 404);
-    if (list.board.ownerId !== req.userId) throw new AppError('Access denied', 403);
+    const member = list.board.members.find((m: any) => m.userId === req.userId);
+    const isOwner = list.board.ownerId === req.userId;
+    if (!isOwner && (!member || member.role !== 'MEMBER')) throw new AppError('Access denied', 403);
 
     const updatedList = await prisma.list.update({
         where: { id },
@@ -70,11 +78,13 @@ export const deleteList = catchAsync(async (req: AuthRequest, res: Response) => 
     
     const list = await prisma.list.findUnique({
         where: { id },
-        include: { board: true }
+        include: { board: { include: { members: true } } }
     });
 
     if (!list) throw new AppError('List not found', 404);
-    if (list.board.ownerId !== req.userId) throw new AppError('Access denied', 403);
+    const member = list.board.members.find((m: any) => m.userId === req.userId);
+    const isOwner = list.board.ownerId === req.userId;
+    if (!isOwner && (!member || member.role !== 'MEMBER')) throw new AppError('Access denied', 403);
 
     await prisma.list.delete({ where: { id } });
     
