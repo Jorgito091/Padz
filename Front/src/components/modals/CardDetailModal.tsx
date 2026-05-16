@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Trash2, Send, Pencil } from 'lucide-react';
+import { X, Plus, Trash2, Send, Pencil, Mail, Check } from 'lucide-react';
 import { Card, Board, CommentData, LabelData } from '../../types';
 import api from '../../services/api';
 
@@ -276,7 +276,7 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
                                 </label>
                                 <form onSubmit={handlePostComment} className="flex gap-4 items-start bg-white/[0.03] p-4 rounded-2xl border border-white/5 ring-1 ring-white/5">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-400 flex items-center justify-center text-xs font-bold shrink-0 border-2 border-white/10 shadow-lg">
-                                        {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover rounded-full" alt="" /> : user?.name.charAt(0).toUpperCase()}
+                                        {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover rounded-full" alt="" /> : user?.name?.charAt(0).toUpperCase()}
                                     </div>
                                     <div className="flex-1 space-y-3">
                                         <textarea

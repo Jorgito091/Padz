@@ -41,7 +41,7 @@ export const getBoards = catchAsync(async (req: AuthRequest, res: Response) => {
             },
             labels: true,
             owner: { select: { name: true, avatar: true } },
-            members: { include: { user: { select: { id: true, name: true, avatar: true } } } }
+            members: { include: { user: { select: { id: true, name: true, email: true, avatar: true } } } }
         },
         orderBy: [
             { isStarred: 'desc' },
@@ -126,7 +126,7 @@ export const getBoardById = catchAsync(async (req: AuthRequest, res: Response) =
             },
             labels: true,
             owner: { select: { name: true, avatar: true } },
-            members: { include: { user: { select: { id: true, name: true, avatar: true } } } }
+            members: { include: { user: { select: { id: true, name: true, email: true, avatar: true } } } }
         },
     });
 
