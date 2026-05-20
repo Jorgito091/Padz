@@ -34,12 +34,13 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const listController = __importStar(require("../controllers/listController"));
+const labelController = __importStar(require("../controllers/labelController"));
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const router = (0, express_1.Router)();
 router.use(authMiddleware_1.authenticate);
-router.get('/', listController.getLists);
-router.post('/', listController.createList);
-router.put('/:id', listController.updateList);
-router.delete('/:id', listController.deleteList);
+router.get('/board/:boardId', labelController.getBoardLabels);
+router.post('/', labelController.createLabel);
+router.delete('/:id', labelController.deleteLabel);
+router.post('/assign', labelController.addLabelToCard);
+router.delete('/unassign/:cardId/:labelId', labelController.removeLabelFromCard);
 exports.default = router;

@@ -41,16 +41,38 @@ export const getBoards = catchAsync(async (req: AuthRequest, res: Response) => {
             },
             labels: true,
             owner: { select: { name: true, avatar: true } },
-            members: { include: { user: { select: { id: true, name: true, email: true, avatar: true } } } }
+            members: { include: { user: { select: { id: true, name: true, email: true, avatar: true } } } },
+            starredBy: {
+                where: { userId: req.userId }
+            }
         },
         orderBy: [
-            { isStarred: 'desc' },
             { order: 'asc' },
             { createdAt: 'desc' }
         ]
     });
-    console.log(`[getBoards] User ${req.userId} found ${boards.length} boards`);
-    res.json(boards);
+
+    const mappedBoards = boards.map(board => {
+        const { starredBy, ...rest } = board;
+        return {
+            ...rest,
+            isStarred: starredBy.length > 0
+        };
+    });
+
+    mappedBoards.sort((a, b) => {
+        if (a.isStarred && !b.isStarred) return -1;
+        if (!a.isStarred && b.isStarred) return 1;
+
+        if ((a.order ?? 0) !== (b.order ?? 0)) {
+            return (a.order ?? 0) - (b.order ?? 0);
+        }
+
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    console.log(`[getBoards] User ${req.userId} found ${mappedBoards.length} boards`);
+    res.json(mappedBoards);
 });
 
 export const createBoard = catchAsync(async (req: AuthRequest, res: Response) => {
@@ -126,7 +148,10 @@ export const getBoardById = catchAsync(async (req: AuthRequest, res: Response) =
             },
             labels: true,
             owner: { select: { name: true, avatar: true } },
-            members: { include: { user: { select: { id: true, name: true, email: true, avatar: true } } } }
+            members: { include: { user: { select: { id: true, name: true, email: true, avatar: true } } } },
+            starredBy: {
+                where: { userId: req.userId }
+            }
         },
     });
 
@@ -138,7 +163,10 @@ export const getBoardById = catchAsync(async (req: AuthRequest, res: Response) =
         throw new AppError('Access denied', 403);
     }
 
-    res.json(board);
+    const isStarred = board.starredBy.length > 0;
+    const { starredBy, ...rest } = board;
+
+    res.json({ ...rest, isStarred });
 });
 
 export const deleteBoard = catchAsync(async (req: AuthRequest, res: Response) => {
@@ -189,12 +217,34 @@ export const toggleStar = catchAsync(async (req: AuthRequest, res: Response) => 
         throw new AppError('Access denied', 403);
     }
 
-    const updatedBoard = await prisma.board.update({
-        where: { id },
-        data: { isStarred: !board.isStarred }
+    const existingStar = await prisma.starredBoard.findUnique({
+        where: {
+            userId_boardId: {
+                userId: req.userId,
+                boardId: id
+            }
+        }
     });
 
-    res.json(updatedBoard);
+    if (existingStar) {
+        await prisma.starredBoard.delete({
+            where: {
+                userId_boardId: {
+                    userId: req.userId,
+                    boardId: id
+                }
+            }
+        });
+        res.json({ ...board, isStarred: false });
+    } else {
+        await prisma.starredBoard.create({
+            data: {
+                userId: req.userId,
+                boardId: id
+            }
+        });
+        res.json({ ...board, isStarred: true });
+    }
 });
 
 export const reorderBoards = catchAsync(async (req: AuthRequest, res: Response) => {

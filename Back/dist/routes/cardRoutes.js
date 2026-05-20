@@ -35,8 +35,12 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const cardController = __importStar(require("../controllers/cardController"));
+const authMiddleware_1 = require("../middleware/authMiddleware");
 const router = (0, express_1.Router)();
+router.use(authMiddleware_1.authenticate);
 router.post('/', cardController.createCard);
 router.put('/:id', cardController.updateCard);
 router.delete('/:id', cardController.deleteCard);
+router.post('/assign', cardController.assignUser);
+router.delete('/unassign/:cardId/:userId', cardController.unassignUser);
 exports.default = router;

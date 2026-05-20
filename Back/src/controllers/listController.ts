@@ -3,7 +3,7 @@ import { AuthRequest } from '../middleware/authMiddleware';
 import prisma from '../prisma';
 import { AppError } from '../utils/AppError';
 import { catchAsync } from '../utils/catchAsync';
-import { io } from '../server';
+
 
 export const getLists = catchAsync(async (req: AuthRequest, res: Response) => {
     const { boardId } = req.query;
@@ -44,6 +44,7 @@ export const createList = catchAsync(async (req: AuthRequest, res: Response) => 
         data: { title, order, boardId },
     });
     
+    const io = req.app.get('io');
     io.to(boardId).emit('board-updated');
     
     res.status(201).json(list);
@@ -68,6 +69,7 @@ export const updateList = catchAsync(async (req: AuthRequest, res: Response) => 
         data: { title, order },
     });
     
+    const io = req.app.get('io');
     io.to(list.boardId).emit('board-updated');
     
     res.json(updatedList);
@@ -88,6 +90,7 @@ export const deleteList = catchAsync(async (req: AuthRequest, res: Response) => 
 
     await prisma.list.delete({ where: { id } });
     
+    const io = req.app.get('io');
     io.to(list.boardId).emit('board-updated');
     
     res.status(204).send();

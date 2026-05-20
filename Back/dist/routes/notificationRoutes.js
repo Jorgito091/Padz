@@ -34,12 +34,11 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const listController = __importStar(require("../controllers/listController"));
+const notificationController = __importStar(require("../controllers/notificationController"));
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const router = (0, express_1.Router)();
 router.use(authMiddleware_1.authenticate);
-router.get('/', listController.getLists);
-router.post('/', listController.createList);
-router.put('/:id', listController.updateList);
-router.delete('/:id', listController.deleteList);
+router.get('/', notificationController.getNotifications);
+router.put('/:id/read', notificationController.markAsRead);
+router.delete('/:id', notificationController.deleteNotification);
 exports.default = router;

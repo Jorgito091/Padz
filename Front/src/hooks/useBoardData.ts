@@ -249,7 +249,7 @@ export const useBoardData = (user: any) => {
                         const overIndex = items.findIndex((i) => i.id === overId);
 
                         let newIndex;
-                        if (overId in prev.lists!) {
+                        if (prev.lists!.some(l => l.id === overId)) {
                             newIndex = items.length + 1;
                         } else {
                             const isBelowOverItem =

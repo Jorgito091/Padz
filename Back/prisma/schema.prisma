@@ -20,6 +20,7 @@ model User {
   comments    Comment[]
   notifications Notification[]
   cardAssignees CardAssignee[]
+  starredBoards StarredBoard[]
 }
 
 model Board {
@@ -31,12 +32,12 @@ model Board {
   updatedAt   DateTime @updatedAt
   bgColor     String?
   description String?
-  isStarred   Boolean       @default(false)
   order       Int           @default(0)
   owner       User          @relation(fields: [ownerId], references: [id])
   lists       List[]
   members     BoardMember[]
   labels      Label[]
+  starredBy   StarredBoard[]
 }
 
 model List {
@@ -124,4 +125,14 @@ model Comment {
   cardId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+}
+
+model StarredBoard {
+  userId    String
+  boardId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@id([userId, boardId])
 }
