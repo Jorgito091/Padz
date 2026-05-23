@@ -1,18 +1,46 @@
-version: '3.8'
+# docker-compose.yml
+# No version field (deprecated in newer Compose spec)
 
 services:
   db:
     image: postgres:15-alpine
-    container_name: padz_postgres
-    restart: always
     environment:
-      POSTGRES_USER: padz_user
-      POSTGRES_PASSWORD: padz_password
-      POSTGRES_DB: padz_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: padz
+    volumes:
+      - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    volumes:
-      - padz_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  back:
+    build:
+      context: ./Back
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgres://postgres:password@db:5432/padz
+      PORT: 4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  front:
+    build:
+      context: ./Front
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - back
+    restart: unless-stopped
 
 volumes:
-  padz_pgdata:
+  pgdata:
