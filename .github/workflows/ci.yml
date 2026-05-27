@@ -1,5 +1,78 @@
 name: CI
 
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: padz
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    strategy:
+      matrix:
+        node-version: [18.x]
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/padz?schema=public
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install backend dependencies
+        working-directory: Back
+        run: npm ci
+
+      - name: Generate Prisma client
+        working-directory: Back
+        run: npx prisma generate
+
+      - name: Check Prisma migrations status
+        working-directory: Back
+        run: npx prisma migrate status --schema=prisma/schema.prisma || true
+
+      - name: Build backend
+        working-directory: Back
+        run: npm run build
+
+      - name: Install frontend dependencies
+        working-directory: Front
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: Front
+        run: npm run build
+
+      - name: Audit backend dependencies
+        working-directory: Back
+        run: npm audit --audit-level=moderate || true
+
+      - name: Upload build artifacts (optional)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: back-dist
+          path: Back/dist
+name: CI
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
