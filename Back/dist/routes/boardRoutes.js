@@ -1,15 +1,20 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const boardController_1 = require("../controllers/boardController");
 const authMiddleware_1 = require("../middleware/authMiddleware");
+const validate_1 = __importDefault(require("../middleware/validate"));
+const board_1 = require("../validation/board");
 const router = (0, express_1.Router)();
 router.use(authMiddleware_1.authenticate);
 router.get('/', boardController_1.getBoards);
-router.post('/', boardController_1.createBoard);
-router.put('/reorder', boardController_1.reorderBoards);
-router.put('/:id', boardController_1.updateBoard);
-router.get('/:id', boardController_1.getBoardById);
-router.delete('/:id', boardController_1.deleteBoard);
-router.patch('/:id/star', boardController_1.toggleStar);
+router.post('/', (0, validate_1.default)(board_1.createBoardSchema), boardController_1.createBoard);
+router.put('/reorder', (0, validate_1.default)(board_1.reorderBoardsSchema), boardController_1.reorderBoards);
+router.put('/:id', (0, validate_1.default)(board_1.updateBoardSchema), boardController_1.updateBoard);
+router.get('/:id', (0, validate_1.default)(board_1.idParamSchema), boardController_1.getBoardById);
+router.delete('/:id', (0, validate_1.default)(board_1.idParamSchema), boardController_1.deleteBoard);
+router.patch('/:id/star', (0, validate_1.default)(board_1.idParamSchema), boardController_1.toggleStar);
 exports.default = router;

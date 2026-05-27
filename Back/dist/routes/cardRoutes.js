@@ -32,15 +32,20 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const cardController = __importStar(require("../controllers/cardController"));
 const authMiddleware_1 = require("../middleware/authMiddleware");
+const validate_1 = __importDefault(require("../middleware/validate"));
+const card_1 = require("../validation/card");
 const router = (0, express_1.Router)();
 router.use(authMiddleware_1.authenticate);
-router.post('/', cardController.createCard);
-router.put('/:id', cardController.updateCard);
-router.delete('/:id', cardController.deleteCard);
-router.post('/assign', cardController.assignUser);
-router.delete('/unassign/:cardId/:userId', cardController.unassignUser);
+router.post('/', (0, validate_1.default)(card_1.createCardSchema), cardController.createCard);
+router.put('/:id', (0, validate_1.default)(card_1.updateCardSchema), cardController.updateCard);
+router.delete('/:id', (0, validate_1.default)(card_1.deleteCardSchema), cardController.deleteCard);
+router.post('/assign', (0, validate_1.default)(card_1.assignUserSchema), cardController.assignUser);
+router.delete('/unassign/:cardId/:userId', (0, validate_1.default)(card_1.unassignUserParamsSchema), cardController.unassignUser);
 exports.default = router;

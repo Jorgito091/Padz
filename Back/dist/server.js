@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.io = void 0;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const helmet_1 = __importDefault(require("helmet"));
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const http_1 = require("http");
 const socket_io_1 = require("socket.io");
@@ -20,6 +22,8 @@ const notificationRoutes_1 = __importDefault(require("./routes/notificationRoute
 const errorHandler_1 = require("./middleware/errorHandler");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
+// if behind a proxy (e.g., nginx, cloud), enable trust proxy for rate limiter
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3001;
 const httpServer = (0, http_1.createServer)(app);
 exports.io = new socket_io_1.Server(httpServer, {
@@ -29,6 +33,16 @@ exports.io = new socket_io_1.Server(httpServer, {
     }
 });
 app.set('io', exports.io);
+// Security: Helmet for secure headers
+app.use((0, helmet_1.default)());
+// Rate limiting: basic global limiter
+const limiter = (0, express_rate_limit_1.default)({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+app.use(limiter);
 exports.io.on("connection", (socket) => {
     console.log(`Socket connected: ${socket.id}`);
     socket.on("join-board", (boardId) => {

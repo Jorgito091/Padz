@@ -2,13 +2,14 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, master]
   pull_request:
-    branches: [ main ]
+    branches: [main, master]
 
 jobs:
-  ci:
+  build-and-test:
     runs-on: ubuntu-latest
+
     services:
       postgres:
         image: postgres:15
@@ -19,23 +20,30 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     strategy:
       matrix:
-        node-version: [18.x]
+        node-version: [20.x]
+
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/padz?schema=public
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: npm
+          cache-dependency-path: |
+            Back/package-lock.json
+            Front/package-lock.json
 
       - name: Install backend dependencies
         working-directory: Back
@@ -45,13 +53,21 @@ jobs:
         working-directory: Back
         run: npx prisma generate
 
-      - name: Check Prisma migrations status
+      - name: Apply Prisma migrations
         working-directory: Back
-        run: npx prisma migrate status --schema=prisma/schema.prisma || true
+        run: npx prisma migrate deploy --schema=prisma/schema.prisma
 
       - name: Build backend
         working-directory: Back
         run: npm run build
+
+      - name: Run backend lint if present
+        working-directory: Back
+        run: npm run lint --if-present
+
+      - name: Run backend tests if present
+        working-directory: Back
+        run: npm test --if-present
 
       - name: Install frontend dependencies
         working-directory: Front
@@ -61,65 +77,14 @@ jobs:
         working-directory: Front
         run: npm run build
 
+      - name: Run frontend lint if present
+        working-directory: Front
+        run: npm run lint --if-present
+
+      - name: Run frontend tests if present
+        working-directory: Front
+        run: npm test --if-present
+
       - name: Audit backend dependencies
         working-directory: Back
-        run: npm audit --audit-level=moderate || true
-
-      - name: Upload build artifacts (optional)
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: back-dist
-          path: Back/dist
-name: CI
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20.x]
-        project: [Back, Front]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-          cache-dependency-path: ${{ matrix.project }}/package-lock.json
-
-      - name: Install dependencies in ${{ matrix.project }}
-        working-directory: ${{ matrix.project }}
-        run: npm ci
-
-      - name: Fix npm audit
-        working-directory: ${{ matrix.project }}
-        run: npm audit fix || echo "No fixable issues"
-
-      - name: Run npm audit
-        working-directory: ${{ matrix.project }}
         run: npm audit --audit-level=moderate
-
-      - name: Check for outdated packages
-        working-directory: ${{ matrix.project }}
-        run: npm outdated || echo "No outdated packages"
-
-      - name: Run lint (if configured)
-        working-directory: ${{ matrix.project }}
-        run: npm run lint || echo "No lint script defined"
-
-      - name: Run tests (if configured)
-        working-directory: ${{ matrix.project }}
-        run: npm test || echo "No test script defined"
