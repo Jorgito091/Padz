@@ -1,107 +1,127 @@
-# Padz - Premium Trello Clone
+# Padz — Documentación del proyecto
 
-Padz es un gestor de tableros moderno, elegante y altamente funcional, diseñado para ofrecer una experiencia de usuario premium con un rendimiento ágil. Inspirado en Trello, pero elevado con una estética de **Glassmorphism** vibrante en tonos naranja, micro-animaciones fluidas y una arquitectura robusta en tiempo real.
+Este repositorio contiene la aplicación Padz (clone tipo Trello). A continuación se documenta la estructura del proyecto, cómo ejecutar el backend y frontend, la configuración de la base de datos y recomendaciones de mejora.
 
-## ✨ Características Principales
+## Resumen rápido
+- Backend: [Back](Back/) — API en TypeScript con Express + Prisma + Socket.io.
+- Frontend: [Front](Front/) — SPA con React, Vite y Tailwind.
+- Orquestación: `docker-compose.yml` en raíz para levantar servicios (Postgres principalmente).
 
-### 📋 Gestión de Tableros y Tareas Pro
-- **Favoritos (Starring)**: Organiza tu flujo de trabajo marcando tableros críticos para acceso instantáneo.
-- **Buscador Inteligente**: Filtra y encuentra cualquier tablero en milisegundos mediante búsqueda reactiva.
-- **Drag & Drop de Alta Fidelidad**: Reordena tableros, listas y tarjetas con total fluidez gracias a `dnd-kit`.
-- **Etiquetas Personalizadas**: Crea, edita y elimina etiquetas por tablero con una paleta de colores vibrante.
-- **Fechas de Vencimiento y Control**: Gestiona plazos con `dueDate` y marca el progreso con estados de completado (`isDone`).
-- **Asignación de Miembros**: Asigna colaboradores específicos a tarjetas para una delegación clara de tareas.
+## Estructura del repositorio
 
-### 👥 Colaboración y Seguridad en Tiempo Real
-- **Sincronización Total**: Todos los cambios (movimientos, ediciones, comentarios) se reflejan al instante para todos los usuarios mediante **WebSockets**.
-- **Notificaciones Inteligentes**: Sistema integrado de notificaciones para mantenerte al tanto de cambios relevantes y menciones.
-- **Gestión de Miembros y Roles**: Invita colaboradores por correo electrónico con roles granulares (`OWNER`, `MEMBER`, `VIEWER`).
-- **Acceso Blindado**: Autenticación segura mediante JWT con inyección de contexto de usuario en cada petición.
-- **Perfil de Usuario**: Personaliza tu identidad visual con avatares y configuraciones de perfil.
+- `Back/` — Código del servidor
+	- `src/` — Código TypeScript (controladores, rutas, middleware, utils)
+	- `prisma/` — Esquema y migraciones de Prisma
+	- `seed_test_user.js` — Script de seed para pruebas
+	- `package.json` — scripts: `dev`, `build`, `start`
 
-### 💬 Comunicación Centralizada
-- **Comentarios en Tiempo Real**: Hilos de discusión fluidos dentro de cada tarjeta con soporte para eliminación y autoría.
+- `Front/` — Aplicación cliente (Vite + React)
+	- `src/` — componentes, páginas, hooks, context
+	- `package.json` — scripts: `dev`, `build`
 
----
+- `docker-compose.yml` — Configuración para servicios (Postgres)
+- `README.md` — Este fichero
 
-## 🛠️ Stack Tecnológico
+## Requisitos
 
-### Backend (Modern Node.js)
-- **TypeScript**: Tipado estricto para un desarrollo sin errores y escalable.
-- **Express 5**: El motor de API más reciente para una gestión de rutas ultra rápida.
-- **Prisma 5**: ORM líder para consultas eficientes y migraciones de base de datos seguras.
-- **PostgreSQL**: Base de datos relacional de alto rendimiento para integridad de datos total.
-- **Socket.io**: Motor de eventos bidireccionales para una experiencia de usuario viva.
-- **JWT & Bcryptjs**: Estándares de la industria para seguridad y cifrado de contraseñas.
+- Node.js v18+ (recomendado)
+- npm o pnpm
+- Docker & Docker Compose (para la base de datos en desarrollo/CI)
 
-### Frontend (Next-Gen React)
-- **Vite 7**: El entorno de desarrollo más rápido del ecosistema JS.
-- **React 18**: Interfaces reactivas y concurrentes de última generación.
-- **Tailwind CSS 3**: Diseño atómico con un sistema de tokens naranja personalizado y efectos de cristal (Glassmorphism).
-- **Framer Motion**: Orquestación de micro-animaciones y transiciones de estado de alta gama.
-- **dnd-kit**: Motor de arrastrar y soltar optimizado para rendimiento y accesibilidad.
-- **Lucide React**: Iconografía minimalista y consistente.
+## Cómo ejecutar en desarrollo
 
----
+1) Levantar dependencias (desde la raíz):
 
-## 🚀 Guía de Instalación
-
-### 1. Requisitos Previos
-- Node.js (v18+)
-- Docker y Docker Compose
-
-### 2. Configuración del Backend
 ```bash
-cd Back
-# Instalar dependencias
-npm install
-
-# Crear archivo de configuración .env
-# Variables necesarias:
-# DATABASE_URL="postgresql://padz_user:padz_password@localhost:5432/padz_db?schema=public"
-# JWT_SECRET="tu_secreto_aqui"
+docker-compose up -d
 ```
 
-### 3. Base de Datos y Servidor
-```bash
-# Levantar PostgreSQL (desde la raíz del proyecto)
-docker-compose up -d
+2) Backend
 
-# Ejecutar migraciones de Prisma
+```bash
 cd Back
+npm install
+# crear .env con al menos:
+# DATABASE_URL=postgresql://<user>:<pass>@localhost:5432/<db>?schema=public
+# JWT_SECRET=alguna_clave
+
+# correr migraciones
 npx prisma migrate dev
 
-# Arrancar en modo desarrollo
+# iniciar en desarrollo (recarga automática)
 npm run dev
 ```
 
-### 4. Configuración del Frontend
+3) Frontend
+
 ```bash
 cd Front
 npm install
 npm run dev
 ```
 
+4) Seeds / pruebas
+
+```bash
+cd Back
+node seed_test_user.js
+```
+
+## Scripts principales
+
+- Backend (`Back/package.json`):
+	- `dev`: `ts-node-dev --respawn --transpile-only src/server.ts`
+	- `build`: `tsc`
+	- `start`: `node dist/server.ts`
+
+- Frontend (`Front/package.json`):
+	- `dev`: `vite`
+	- `build`: `tsc && vite build`
+
+## Base de datos y Prisma
+
+- Esquema en `Back/prisma/schema.prisma` y migraciones en `Back/prisma/migrations/`.
+- Para desarrollar: usar `npx prisma migrate dev` que aplicará migraciones y actualizará `prisma/client`.
+
+## Desarrollo en contenedores (opcional)
+
+- El `docker-compose.yml` permite levantar una instancia de Postgres para desarrollo. Asegúrate de ajustar `DATABASE_URL` acorde al servicio levantado.
+
+## Notas de arquitectura
+
+- Autenticación: JWT (revisar `Back/src/controllers/authController.ts` y `Back/src/middleware/authMiddleware.ts`).
+- Realtime: Socket.io integrado en backend y cliente (`socket.io-client`).
+- ORM: Prisma 5 con migraciones versionadas.
+
+## Recomendaciones y mejoras sugeridas
+
+- Tests automatizados: Añadir suites de pruebas unitarias e integración (Jest/ Vitest + supertest) para controlar regresiones en la API y lógica crítica.
+- CI: Pipeline (GitHub Actions) que ejecute lint, build y tests; y que despliegue migraciones en entornos de staging.
+- Secrets: Añadir ejemplo `env.example` y no subir `.env`. Considerar `dotenv-flow` o `vault` en producción.
+- Types & runtime: Migrar `type: commonjs` a ESM si se planea aprovechar módulos modernos y mejoras en tree-shaking.
+- Seguridad: Implementar rate-limiting, validación intensiva de inputs (zod/yup) y escapar/filtrar datos en consultas.
+- Escalabilidad Socket: Revisar estrategia de pub/sub (Redis adapter) si hay múltiples instancias del backend.
+- Observabilidad: Añadir logs estructurados (pino/winston) y métricas básicas (Prometheus) para monitoreo.
+
+## Tareas recomendadas a corto plazo
+
+1. Añadir `env.example` con todas las variables esperadas.
+2. Añadir scripts de tests y un `Dockerfile` para el backend si se va a desplegar en contenedores.
+3. Añadir una tarea de seed idempotente para entornos de desarrollo.
+4. Añadir validaciones con `zod` en las rutas públicas.
+
+## Qué hice en este cambio
+
+- Documenté la estructura y los comandos básicos para desarrollo.
+- Listé mejoras priorizadas y tareas a corto plazo.
+
 ---
 
-## 🧠 Arquitectura y Funcionamiento
+Si quieres, puedo:
 
-### ⚙️ Ciclo de Vida del Backend
-1.  **Auth Layer**: Middleware `authenticate` valida el JWT e inyecta el `userId`.
-2.  **Permission Layer**: Los controladores verifican roles antes de ejecutar acciones críticas (ej: solo `OWNER` puede borrar tableros).
-3.  **Real-time Layer**: Integración nativa de Sockets en los servicios para emitir cambios globales al instante.
+- Añadir `env.example` automáticamente.
+- Crear un archivo `CONTRIBUTING.md` con flujo de trabajo y reglas.
+- Crear un `Dockerfile` para el backend y añadir servicio en `docker-compose`.
 
-### 💻 Experiencia de Usuario (Frontend)
-1.  **Context Driven**: `AuthContext` gestiona la sesión y persistencia del usuario.
-2.  **Optimistic UI**: Las interacciones se sienten instantáneas gracias a la gestión de estado reactiva.
-3.  **Glassmorphism Design**: Uso intensivo de `backdrop-blur`, bordes semitransparentes y gradientes naranja para un look premium.
-
----
-
-## 👩‍💻 Guía de Extensión
-- **Nuevos Modelos**: Actualiza `prisma/schema.prisma` y corre `npx prisma migrate dev`.
-- **Nuevos Eventos**: Añade listeners en `Back/src/server.ts` y conecta en el frontend vía `socket.io-client`.
-
----
-*Developed with the power of caffeine and a passion for premium design*
+Dime cuál de estas acciones quieres que haga a continuación.
 
