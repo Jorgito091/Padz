@@ -11,10 +11,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 export const register = catchAsync(async (req: Request, res: Response) => {
     const { email, password, name } = req.body;
 
-    if (!email || !password || !name) {
-        throw new AppError('Email, password and name are required', 400);
-    }
-
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
         throw new AppError('User already exists', 400);
