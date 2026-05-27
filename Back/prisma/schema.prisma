@@ -4,36 +4,37 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  avatar      String?
-  boards      Board[]
-  memberships BoardMember[]
-  comments    Comment[]
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  name          String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  avatar        String?
+  boards        Board[]
+  memberships   BoardMember[]
+  comments      Comment[]
   notifications Notification[]
   cardAssignees CardAssignee[]
   starredBoards StarredBoard[]
+  refreshTokens RefreshToken[]
 }
 
 model Board {
-  id          String   @id @default(uuid())
+  id          String         @id @default(uuid())
   title       String
   bgImage     String?
   ownerId     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   bgColor     String?
   description String?
-  order       Int           @default(0)
-  owner       User          @relation(fields: [ownerId], references: [id])
+  order       Int            @default(0)
+  owner       User           @relation(fields: [ownerId], references: [id])
   lists       List[]
   members     BoardMember[]
   labels      Label[]
@@ -52,37 +53,37 @@ model List {
 }
 
 model Card {
-  id          String   @id @default(uuid())
+  id          String         @id @default(uuid())
   title       String
   description String?
   order       Int
   listId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  list        List           @relation(fields: [listId], references: [id], onDelete: Cascade)
   comments    Comment[]
   labels      CardLabel[]
   dueDate     DateTime?
-  isDone      Boolean     @default(false)
+  isDone      Boolean        @default(false)
   assignees   CardAssignee[]
 }
 
 model Label {
-  id      String @id @default(uuid())
+  id      String      @id @default(uuid())
   name    String
   color   String // hex or class
   boardId String
-  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  board   Board       @relation(fields: [boardId], references: [id], onDelete: Cascade)
   cards   CardLabel[]
-  
+
   @@unique([name, boardId])
 }
 
 model CardLabel {
   cardId  String
   labelId String
-  card    Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  label   Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+  card    Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  label   Label  @relation(fields: [labelId], references: [id], onDelete: Cascade)
 
   @@id([cardId, labelId])
 }
@@ -101,8 +102,8 @@ model BoardMember {
 model CardAssignee {
   cardId String
   userId String
-  card   Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([cardId, userId])
 }
@@ -135,4 +136,15 @@ model StarredBoard {
   board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
   @@id([userId, boardId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  revoked   Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

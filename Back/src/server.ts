@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
@@ -16,6 +18,8 @@ import { errorHandler } from './middleware/errorHandler';
 dotenv.config();
 
 const app = express();
+// if behind a proxy (e.g., nginx, cloud), enable trust proxy for rate limiter
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3001;
 
 const httpServer = createServer(app);
@@ -27,6 +31,18 @@ export const io = new Server(httpServer, {
 });
 
 app.set('io', io);
+
+// Security: Helmet for secure headers
+app.use(helmet());
+
+// Rate limiting: basic global limiter
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+app.use(limiter);
 
 io.on("connection", (socket: Socket) => {
     console.log(`Socket connected: ${socket.id}`);
