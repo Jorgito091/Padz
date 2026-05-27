@@ -93,4 +93,10 @@ node seed_test_user.js
 - Realtime: Socket.io integrado en backend y cliente (`socket.io-client`).
 - ORM: Prisma 5 con migraciones versionadas.
 
+Tereas proximas 
+Rate-limiting + helmet: alta, esfuerzo medio. Añadir helmet y un rate-limiter (express-rate-limit) en server.ts.
+Refresh tokens y política de contraseñas: alta, esfuerzo medio‑alto. Implementar refresh tokens seguros y checks de fuerza / expiración y revocación.
+CI: tests y scan: alta, esfuerzo medio. Pipeline (GitHub Actions) que ejecute lint, build, tests y escanee dependencias (Dependabot/Snyk).
+Logs y auditoría: media, esfuerzo medio. Añadir logging estructurado (pino/winston) y auditoría de acciones críticas.
+Validaciones adicionales: media, esfuerzo medio. Añadir zod para list, member, comment,
 
