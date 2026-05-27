@@ -10,9 +10,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
     services:
       postgres:
         image: postgres:15
@@ -33,6 +30,7 @@ jobs:
         node-version: [22.x]
 
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/padz?schema=public
 
     steps:
