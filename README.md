@@ -137,12 +137,5 @@ npm run test --if-present
 - Completar validaciones Zod para recursos.
 - Añadir tests de integración/E2E para flujos críticos.
 
-## Contacto
-- Mantenedores: revisa `CONTRIBUTING.md` para contactos y canales.
 
-## Licencia
-- MIT
 
----
-
-Si quieres, puedo añadir enlaces directos a `API_REFERENCE.md`, `ARCHITECTURE.md` y otros documentos, o generar un `docs/` índice para MkDocs.
