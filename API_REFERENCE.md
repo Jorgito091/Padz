@@ -1,0 +1,113 @@
+# API_REFERENCE — Padz API
+
+Última revisión: 2026-05-27
+
+Prefacio
+-------
+Los endpoints listados reflejan las rutas definidas en `Back/src/routes/` y los controladores en `Back/src/controllers/`.
+
+Base URL (desarrollo): http://localhost:3001/api
+
+Autenticación
+-------------
+- El sistema usa JWT para `accessToken` y refresh tokens rotativos almacenados en la BD.
+- Añadir cabecera: `Authorization: Bearer <accessToken>` para endpoints protegidos.
+
+Endpoints principales
+---------------------
+
+**Auth**
+
+- POST `/api/auth/register`
+  - Body: `{ email, password, name }`
+  - Validaciones: `password` mínimo 8 chars, must include upper/lower/digit/special
+  - Response: `{ user, accessToken, refreshToken }` (201)
+
+- POST `/api/auth/login`
+  - Body: `{ email, password }`
+  - Response: `{ user, accessToken, refreshToken }`
+
+- POST `/api/auth/refresh`
+  - Body: `{ refreshToken }`
+  - Response: `{ accessToken, refreshToken }` (rotación)
+
+- POST `/api/auth/logout`
+  - Body: `{ refreshToken }`
+  - Response: 204
+
+- PUT `/api/auth/profile`
+  - Protected
+  - Body: `{ name?, avatar? }`
+  - Response: `{ user }`
+
+**Boards** (protected — `authenticate` middleware)
+
+- GET `/api/boards` — listar boards del usuario
+- POST `/api/boards` — crear board `{ title, description?, bgColor?, bgImage? }`
+- GET `/api/boards/:id` — obtener board por id
+- PUT `/api/boards/:id` — actualizar board
+- DELETE `/api/boards/:id` — eliminar
+- PATCH `/api/boards/:id/star` — toggle star
+- PUT `/api/boards/reorder` — reordenar boards
+
+**Lists** (protected)
+
+- GET `/api/lists` — query por `boardId` en query
+- POST `/api/lists` — crear list
+- PUT `/api/lists/:id` — actualizar
+- DELETE `/api/lists/:id` — eliminar
+
+**Cards** (protected)
+
+- POST `/api/cards` — crear carta
+- PUT `/api/cards/:id` — actualizar
+- DELETE `/api/cards/:id` — eliminar
+- POST `/api/cards/assign` — asignar usuario a carta
+- DELETE `/api/cards/unassign/:cardId/:userId` — desasignar
+
+**Comments** (protected)
+
+- POST `/api/comments` — crear comment `{ cardId, text }`
+- GET `/api/comments/:cardId` — listar
+- DELETE `/api/comments/:id` — eliminar
+
+**Labels** (protected)
+
+- GET `/api/labels/board/:boardId` — labels del board
+- POST `/api/labels` — crear
+- DELETE `/api/labels/:id`
+- POST `/api/labels/assign` — asignar label a card
+- DELETE `/api/labels/unassign/:cardId/:labelId`
+
+**Members** (protected)
+
+- POST `/api/members` — añadir miembro a board
+- GET `/api/members/:boardId` — listar miembros
+- PATCH `/api/members/role` — cambiar rol
+- DELETE `/api/members/:boardId/:userId` — remover miembro
+
+**Notifications** (protected)
+
+- GET `/api/notifications` — listar
+- PUT `/api/notifications/:id/read` — marcar leído
+- DELETE `/api/notifications/:id` — eliminar
+
+Errores frecuentes
+------------------
+- 400 Bad Request — validación Zod fallida
+- 401 Unauthorized — token faltante/expirado
+- 403 Forbidden — permisos insuficientes (roles aún básicos)
+- 404 Not Found — recurso no existe
+
+Ejemplo: login (curl)
+---------------------
+```bash
+curl -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"Abc!1234"}'
+```
+
+Notas
+-----
+- Validaciones Zod en `Back/src/validation/`.
+- Autorización basada en `userId` provisto por `authenticate` middleware.
