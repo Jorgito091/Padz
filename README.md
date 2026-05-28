@@ -1,102 +1,148 @@
-# Padz — Documentación del proyecto
+# Padz
 
-Este repositorio contiene la aplicación Padz (clone tipo Trello). A continuación se documenta la estructura del proyecto, cómo ejecutar el backend y frontend, la configuración de la base de datos y recomendaciones de mejora.
+Proyecto Padz — tablero colaborativo (estilo Trello). Repositorio monorepo con `Back/` (API) y `Front/` (cliente SPA).
 
-## Resumen rápido
-- Backend: [Back](Back/) — API en TypeScript con Express + Prisma + Socket.io.
-- Frontend: [Front](Front/) — SPA con React, Vite y Tailwind.
-- Orquestación: `docker-compose.yml` en raíz para levantar servicios (Postgres principalmente).
+## Estado rápido
+- Backend: TypeScript + Express + Prisma + Socket.io (`Back/`).
+- Frontend: React + Vite + Tailwind (`Front/`).
+- DB: PostgreSQL con migraciones gestionadas por Prisma (`Back/prisma/`).
+- CI: GitHub Actions (`.github/workflows/ci.yml`).
 
-## Estructura del repositorio
+## Badges
+![build](https://img.shields.io/badge/build-pending-yellow)
+![license](https://img.shields.io/badge/license-MIT-blue)
 
-- `Back/` — Código del servidor
-	- `src/` — Código TypeScript (controladores, rutas, middleware, utils)
-	- `prisma/` — Esquema y migraciones de Prisma
-	- `seed_test_user.js` — Script de seed para pruebas
-	- `package.json` — scripts: `dev`, `build`, `start`
+## Índice
+- Instalación
+- Ejecución local
+- Migraciones y DB
+- Variables de entorno
+- Uso básico / API
+- Arquitectura
+- Despliegue
+- Seguridad
+- Tests
+- Contribuir
+- Roadmap
+- Contacto
 
-- `Front/` — Aplicación cliente (Vite + React)
-	- `src/` — componentes, páginas, hooks, context
-	- `package.json` — scripts: `dev`, `build`
-
-- `docker-compose.yml` — Configuración para servicios (Postgres)
-- `README.md` — Este fichero
-
-## Requisitos
-
-- Node.js v18+ (recomendado)
+## Instalación
+Requisitos:
+- Node.js 18+ (o 22 en CI/producción)
 - npm o pnpm
-- Docker & Docker Compose (para la base de datos en desarrollo/CI)
+- Docker & Docker Compose (recomendado para Postgres)
 
-## Cómo ejecutar en desarrollo
-
-1) Levantar dependencias (desde la raíz):
+Pasos rápidos:
 
 ```bash
+# levantar servicios (Postgres)
 docker-compose up -d
-```
 
-2) Backend
-
-```bash
+# backend
 cd Back
 npm install
-# crear .env con al menos:
-# DATABASE_URL=postgresql://<user>:<pass>@localhost:5432/<db>?schema=public
-# JWT_SECRET=alguna_clave
-
-# correr migraciones
+# crear .env (ver sección Variables de entorno)
 npx prisma migrate dev
-
-# iniciar en desarrollo (recarga automática)
 npm run dev
-```
 
-3) Frontend
-
-```bash
+# frontend (en otra terminal)
 cd Front
 npm install
 npm run dev
 ```
 
-4) Seeds / pruebas
+## Variables de entorno mínimas
+En `Back/.env` (ejemplo):
+
+- `DATABASE_URL=postgresql://postgres:password@localhost:5432/padz?schema=public`
+- `JWT_SECRET=your_jwt_secret`
+- `ACCESS_TOKEN_EXPIRES_IN=15m`
+- `REFRESH_TOKEN_EXPIRES_IN=7d`
+
+No incluyas secretos en VCS; usa GitHub Secrets para CI/producción.
+
+## Migraciones y base de datos
+- Esquema: `Back/prisma/schema.prisma`.
+- Migraciones: `Back/prisma/migrations/` (versionadas). Si añades un modelo nuevo en Prisma, ejecuta:
 
 ```bash
 cd Back
-node seed_test_user.js
+npx prisma migrate dev --name describe_change
+git add prisma/migrations
+git commit -m "chore(prisma): add migration for X"
 ```
 
-## Scripts principales
+En producción y CI usamos `npx prisma migrate deploy`.
 
-- Backend (`Back/package.json`):
-	- `dev`: `ts-node-dev --respawn --transpile-only src/server.ts`
-	- `build`: `tsc`
-	- `start`: `node dist/server.ts`
+## Uso básico / API
+Autenticación principal:
+- `POST /api/auth/register` — registro
+- `POST /api/auth/login` — login (access + refresh token)
+- `POST /api/auth/refresh` — intercambia refresh token por nuevo access token
+- `POST /api/auth/logout` — invalidar refresh token
 
-- Frontend (`Front/package.json`):
-	- `dev`: `vite`
-	- `build`: `tsc && vite build`
+Ejemplo de login (curl):
 
-## Base de datos y Prisma
+```bash
+curl -X POST -H "Content-Type: application/json" http://localhost:3000/api/auth/login \
+  -d '{"email":"test@example.com","password":"P4ssw0rd!"}'
+```
 
-- Esquema en `Back/prisma/schema.prisma` y migraciones en `Back/prisma/migrations/`.
-- Para desarrollar: usar `npx prisma migrate dev` que aplicará migraciones y actualizará `prisma/client`.
+Para detalles completos de endpoints, ver [API_REFERENCE.md](API_REFERENCE.md).
 
-## Desarrollo en contenedores (opcional)
+Documentación adicional:
 
-- El `docker-compose.yml` permite levantar una instancia de Postgres para desarrollo. Asegúrate de ajustar `DATABASE_URL` acorde al servicio levantado.
+- [API Reference](API_REFERENCE.md)
+- [Architecture](ARCHITECTURE.md)
 
-## Notas de arquitectura
+## Arquitectura
+- Monolito con separación Front/Back.
+- Backend expone REST API y Socket.io para eventos en tiempo real.
+- ORM: Prisma con Postgres.
 
-- Autenticación: JWT (revisar `Back/src/controllers/authController.ts` y `Back/src/middleware/authMiddleware.ts`).
-- Realtime: Socket.io integrado en backend y cliente (`socket.io-client`).
-- ORM: Prisma 5 con migraciones versionadas.
+Diagrama de alto nivel (mermaid):
 
-Tereas proximas 
-Rate-limiting + helmet: alta, esfuerzo medio. Añadir helmet y un rate-limiter (express-rate-limit) en server.ts.
-Refresh tokens y política de contraseñas: alta, esfuerzo medio‑alto. Implementar refresh tokens seguros y checks de fuerza / expiración y revocación.
-CI: tests y scan: alta, esfuerzo medio. Pipeline (GitHub Actions) que ejecute lint, build, tests y escanee dependencias (Dependabot/Snyk).
-Logs y auditoría: media, esfuerzo medio. Añadir logging estructurado (pino/winston) y auditoría de acciones críticas.
-Validaciones adicionales: media, esfuerzo medio. Añadir zod para list, member, comment,
+```mermaid
+graph LR
+  Front -->|HTTP| Back[Backend API]
+  Front -->|Socket.io| Back
+  Back --> Postgres[(Postgres)]
+```
 
+## Seguridad
+- Se aplicaron medidas básicas: `helmet` y `express-rate-limit` en `Back/src/server.ts`.
+- Sistema de refresh tokens con rotación y revocación (ver `Back/src/controllers/authController.ts`).
+- Recomendaciones: habilitar HTTPS en producción, restringir CORS y usar GitHub Secrets.
+
+## Despliegue
+- CI ejecuta lint, build y despliegue.
+- Dockerfiles en `Back/Dockerfile` y `Front/Dockerfile`.
+- Entrypoint de `Back` ejecuta `npx prisma migrate deploy` antes de arrancar.
+
+## Tests y lint
+- Ejecuta en `Back`:
+
+```bash
+cd Back
+npm run lint
+npm run build
+npm run test --if-present
+```
+
+## Contribuir
+- Lee `CONTRIBUTING.md` para guía de PRs, convenciones de commit y revisión.
+
+## Roadmap (resumen)
+- Añadir logging estructurado y auditoría.
+- Completar validaciones Zod para recursos.
+- Añadir tests de integración/E2E para flujos críticos.
+
+## Contacto
+- Mantenedores: revisa `CONTRIBUTING.md` para contactos y canales.
+
+## Licencia
+- MIT
+
+---
+
+Si quieres, puedo añadir enlaces directos a `API_REFERENCE.md`, `ARCHITECTURE.md` y otros documentos, o generar un `docs/` índice para MkDocs.
