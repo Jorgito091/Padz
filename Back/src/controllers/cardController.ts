@@ -160,3 +160,63 @@ export const unassignUser = catchAsync(async (req: AuthRequest, res: Response) =
     res.status(204).send();
 });
 
+export const searchCards = catchAsync(async (req: AuthRequest, res: Response) => {
+    const { q, labelIds, assignedTo, boardId, isDone, page = '1', limit = '20' } = req.query as any;
+
+    const pageNum = Math.max(parseInt(page as string, 10) || 1, 1);
+    const take = Math.min(parseInt(limit as string, 10) || 20, 100);
+    const skip = (pageNum - 1) * take;
+
+    const where: any = { };
+
+    // Board filter via list
+    if (boardId) {
+        where.list = { boardId: boardId };
+    }
+
+    // Text search on title/description
+    if (q) {
+        where.AND = where.AND || [];
+        where.AND.push({
+            OR: [
+                { title: { contains: q as string, mode: 'insensitive' } },
+                { description: { contains: q as string, mode: 'insensitive' } }
+            ]
+        });
+    }
+
+    // Label filter (comma separated ids)
+    if (labelIds) {
+        const ids = (labelIds as string).split(',').map(s => s.trim()).filter(Boolean);
+        if (ids.length) {
+            where.labels = { some: { labelId: { in: ids } } };
+        }
+    }
+
+    // Assigned to filter
+    if (assignedTo) {
+        where.assignees = { some: { userId: assignedTo as string } };
+    }
+
+    if (isDone === 'true' || isDone === 'false') {
+        where.isDone = isDone === 'true';
+    }
+
+    const [cards, total] = await Promise.all([
+        prisma.card.findMany({
+            where,
+            include: {
+                list: true,
+                labels: { include: { label: true } },
+                assignees: { include: { user: { select: { id: true, name: true, avatar: true } } } }
+            },
+            orderBy: { updatedAt: 'desc' },
+            skip,
+            take
+        }),
+        prisma.card.count({ where })
+    ]);
+
+    res.json({ data: cards, meta: { total, page: pageNum, limit: take } });
+});
+

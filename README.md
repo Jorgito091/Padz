@@ -18,6 +18,7 @@ Proyecto Padz — tablero colaborativo (estilo Trello). Repositorio monorepo con
 - Migraciones y DB
 - Variables de entorno
 - Uso básico / API
+  - Búsqueda avanzada: se añadió un endpoint `GET /api/cards/search` para filtrar tarjetas por texto, etiquetas (`labelIds` CSV), asignado, tablero y estado. También existe una UI en el cliente en la ruta `/search`.
 - Arquitectura
 - Despliegue
 - Seguridad
