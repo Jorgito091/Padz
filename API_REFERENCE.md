@@ -42,10 +42,26 @@ Endpoints principales
 
 **Boards** (protected — `authenticate` middleware)
 
-- GET `/api/boards` — listar boards del usuario
-- POST `/api/boards` — crear board `{ title, description?, bgColor?, bgImage? }`
-- GET `/api/boards/:id` — obtener board por id
-- PUT `/api/boards/:id` — actualizar board
+**Advanced Search**
+
+- GET `/api/cards/search` — búsqueda avanzada de tarjetas
+  - Query params:
+    - `q` (string, optional): texto libre para buscar en `title` o `description` (insensitive).
+    - `labelIds` (string, optional): lista de `labelId` separados por comas (ej. `id1,id2`).
+    - `assignedTo` (uuid, optional): filtrar tarjetas asignadas a `userId`.
+    - `boardId` (uuid, optional): filtrar por `boardId` (se usa para limitar a un tablero).
+    - `isDone` (string, optional): `true` o `false` para filtrar estado completado.
+    - `page` (int, optional) y `limit` (int, optional): paginación.
+  - Response: `{ data: Card[], meta: { total, page, limit } }`.
+  - Ejemplo (curl):
+
+```bash
+curl -G "http://localhost:3001/api/cards/search" \
+  --data-urlencode "q=bug" \
+  --data-urlencode "labelIds=1111-2222-3333,4444-5555-6666" \
+  --data-urlencode "boardId=aaaa-bbbb-cccc" \
+  -H "Authorization: Bearer <accessToken>"
+```
 - DELETE `/api/boards/:id` — eliminar
 - PATCH `/api/boards/:id/star` — toggle star
 - PUT `/api/boards/reorder` — reordenar boards

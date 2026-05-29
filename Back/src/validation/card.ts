@@ -40,3 +40,15 @@ export const unassignUserParamsSchema = z.object({
     userId: z.string().uuid()
   })
 });
+
+export const searchCardsSchema = z.object({
+  query: z.object({
+    q: z.string().optional(),
+    labelIds: z.string().optional(), // comma separated label ids
+    assignedTo: z.string().uuid().optional(),
+    boardId: z.string().uuid().optional(),
+    isDone: z.string().optional(), // 'true'|'false'
+    page: z.string().optional(),
+    limit: z.string().optional()
+  })
+});
