@@ -190,6 +190,62 @@ Este proyecto está bajo la licencia **MIT**. Ver el archivo [LICENSE](LICENSE) 
 
 ---
 
+## 🔬 Tests de integración (auth ↔ socket)
+
+**Objetivo:** Verificar que el flujo completo de autenticación y la capa de WebSocket funciona de forma correcta e íntegra, combinando varios componentes que en pruebas unitarias se evalúan por separado.
+
+**Qué cubre:**
+- Login → generación de `accessToken`/`refreshToken`.
+- Handshake del socket con `auth.token`.
+- Validación del token por el middleware del servidor.
+- Autorización para eventos `join-board`, `join-user`.
+- Recepción de notificaciones emitidas por el servidor.
+
+**Beneficios:** Detecta regresiones de seguridad, asegura que solo usuarios autenticados pueden abrir sockets, previene errores de sincronización entre backend y frontend y da confianza para refactorings.
+
+**Ejemplo de test (Jest + socket.io‑client):**
+```ts
+import { io } from 'socket.io-client';
+import request from 'supertest';
+import { app } from '../src/server';
+
+it('login → socket handshake → receive notification', async () => {
+  const loginRes = await request(app)
+    .post('/api/auth/login')
+    .send({ email: 'test@example.com', password: 'Abc!1234' })
+    .expect(200);
+  const { accessToken } = loginRes.body;
+
+  const socket = io('http://localhost:3001', {
+    auth: { token: accessToken },
+    transports: ['websocket'],
+  });
+
+  await new Promise((resolve, reject) => {
+    socket.on('connect', () => {
+      socket.emit('join-board', { boardId: 'some-board-id' });
+      resolve(undefined);
+    });
+    socket.on('connect_error', reject);
+  });
+
+  const notifPayload = { message: 'Card moved', boardId: 'some-board-id' };
+  // Simular notificación en backend (pseudo‑código)
+  // await server.emitNotification(notifPayload);
+
+  const received = await new Promise(res =>
+    socket.once('notification', data => res(data))
+  );
+  expect(received).toMatchObject(notifPayload);
+  socket.disconnect();
+});
+```
+
+**Cuándo ejecutarlo:** En cada CI pipeline, después de cambios en autenticación o en la configuración de `socket.io`. Si falla, el despliegue se bloquea.
+
+---
+
+
 ## 📚 Índice
 - Instalación
 - Ejecución local
