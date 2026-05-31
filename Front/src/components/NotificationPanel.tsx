@@ -15,7 +15,7 @@ export const NotificationPanel: React.FC = () => {
     useEffect(() => {
         if (user) {
             fetchNotifications();
-            const socket = socketService.getSocket();
+            const socket = socketService.connect();
             if (socket) {
                 socketService.joinUser(user.id);
                 socket.on('notification', (newNotification: Notification) => {

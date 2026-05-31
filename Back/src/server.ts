@@ -5,6 +5,9 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
+import jwt from 'jsonwebtoken';
+import prisma from './prisma';
+
 import boardRoutes from './routes/boardRoutes';
 import listRoutes from './routes/listRoutes';
 import cardRoutes from './routes/cardRoutes';
@@ -44,12 +47,47 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-io.on("connection", (socket: Socket) => {
-    console.log(`Socket connected: ${socket.id}`);
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
-    socket.on("join-board", (boardId: string) => {
-        socket.join(boardId);
-        console.log(`Socket ${socket.id} joined board ${boardId}`);
+// Socket.io Authentication Middleware
+io.use((socket, next) => {
+    const token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(' ')[1];
+    if (!token) {
+        return next(new Error('Authentication error: Token missing'));
+    }
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+        socket.data = { userId: decoded.userId };
+        next();
+    } catch (err) {
+        return next(new Error('Authentication error: Invalid or expired token'));
+    }
+});
+
+io.on("connection", (socket: Socket) => {
+    console.log(`Socket connected: ${socket.id} for user ${socket.data.userId}`);
+
+    socket.on("join-board", async (boardId: string) => {
+        try {
+            const board = await prisma.board.findUnique({
+                where: { id: boardId },
+                include: { members: true }
+            });
+            if (!board) {
+                console.warn(`[Socket] Board ${boardId} not found`);
+                return;
+            }
+            const isOwner = board.ownerId === socket.data.userId;
+            const isMember = board.members.some(m => m.userId === socket.data.userId);
+            if (!isOwner && !isMember) {
+                console.warn(`[Socket] Access denied to user ${socket.data.userId} for board ${boardId}`);
+                return;
+            }
+            socket.join(boardId);
+            console.log(`Socket ${socket.id} joined board ${boardId}`);
+        } catch (error) {
+            console.error('[Socket] Error on join-board:', error);
+        }
     });
 
     socket.on("leave-board", (boardId: string) => {
@@ -58,6 +96,10 @@ io.on("connection", (socket: Socket) => {
     });
 
     socket.on("join-user", (userId: string) => {
+        if (socket.data.userId !== userId) {
+            console.warn(`[Socket] User ${socket.data.userId} tried to join private user room ${userId}`);
+            return;
+        }
         socket.join(userId);
         console.log(`Socket ${socket.id} joined user room ${userId}`);
     });

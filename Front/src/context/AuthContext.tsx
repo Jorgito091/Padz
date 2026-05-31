@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
 import { User } from '../types';
+import { socketService } from '../services/socket';
+
 
 interface AuthContextType {
     user: User | null;
@@ -26,19 +28,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (savedToken && savedUser) {
             setToken(savedToken);
             setUser(JSON.parse(savedUser));
+            socketService.connect();
         }
         setIsLoading(false);
     }, []);
 
+
     const login = async (email: string, password: string) => {
         try {
             const response = await api.post('/auth/login', { email, password });
-            const { user, token } = response.data;
+            const { user, accessToken } = response.data;
 
             setUser(user);
-            setToken(token);
-            localStorage.setItem('padz_token', token);
+            setToken(accessToken);
+            localStorage.setItem('padz_token', accessToken);
             localStorage.setItem('padz_user', JSON.stringify(user));
+            socketService.connect();
         } catch (error) {
             throw error;
         }
@@ -47,12 +52,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const register = async (name: string, email: string, password: string) => {
         try {
             const response = await api.post('/auth/register', { name, email, password });
-            const { user, token } = response.data;
+            const { user, accessToken } = response.data;
 
             setUser(user);
-            setToken(token);
-            localStorage.setItem('padz_token', token);
+            setToken(accessToken);
+            localStorage.setItem('padz_token', accessToken);
             localStorage.setItem('padz_user', JSON.stringify(user));
+            socketService.connect();
         } catch (error) {
             throw error;
         }
@@ -63,6 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setToken(null);
         localStorage.removeItem('padz_token');
         localStorage.removeItem('padz_user');
+        socketService.disconnect();
     };
 
     const updateUser = (updatedUser: User) => {

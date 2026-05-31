@@ -44,6 +44,7 @@ const card_1 = require("../validation/card");
 const router = (0, express_1.Router)();
 router.use(authMiddleware_1.authenticate);
 router.post('/', (0, validate_1.default)(card_1.createCardSchema), cardController.createCard);
+router.get('/search', (0, validate_1.default)(card_1.searchCardsSchema), cardController.searchCards);
 router.put('/:id', (0, validate_1.default)(card_1.updateCardSchema), cardController.updateCard);
 router.delete('/:id', (0, validate_1.default)(card_1.deleteCardSchema), cardController.deleteCard);
 router.post('/assign', (0, validate_1.default)(card_1.assignUserSchema), cardController.assignUser);
