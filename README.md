@@ -140,17 +140,41 @@ http://localhost:3001/api/docs
 3. Abre un Pull Request contra `dev`
 4. Asegúrate de que CI pase (lint, tests, build)
 
+# Consolidated Project Summary
+
+## 📖 Proyecto Padz
+Proyecto Padz — tablero colaborativo (estilo Trello). Repositorio monorepo con `Back/` (API) y `Front/` (cliente SPA).
+
+### Badges
+![build](https://img.shields.io/badge/build-passing-brightgreen)
+![license](https://img.shields.io/badge/license-MIT-blue)
+
 ---
 
 ## 📄 Licencia
-
 Este proyecto está bajo la licencia **MIT**. Ver el archivo [LICENSE](LICENSE) para más detalles.
 
 ---
 
 ## 🙋‍♂️ Contacto
-
 - **Autor**: Jorgito091
 - **GitHub**: https://github.com/Jorgito091
 - **Issues**: Abre un *issue* para reportar bugs o solicitar mejoras.
 - **Version**: 1.0.0
+
+---
+
+## 📚 Índice
+- Instalación
+- Ejecución local
+- Migraciones y DB
+- Variables de entorno
+- Uso básico / API
+  - Búsqueda avanzada: se añadió un endpoint `GET /api/cards/search` para filtrar tarjetas por texto, etiquetas (`labelIds` CSV), asignado, tablero y estado. También existe una UI en el cliente en la ruta `/search`.
+- Arquitectura
+- Despliegue
+- Seguridad
+- Tests
+- Contribuir
+- Roadmap
+- Contacto

@@ -11,6 +11,8 @@ const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const http_1 = require("http");
 const socket_io_1 = require("socket.io");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const prisma_1 = __importDefault(require("./prisma"));
 const boardRoutes_1 = __importDefault(require("./routes/boardRoutes"));
 const listRoutes_1 = __importDefault(require("./routes/listRoutes"));
 const cardRoutes_1 = __importDefault(require("./routes/cardRoutes"));
@@ -43,17 +45,56 @@ const limiter = (0, express_rate_limit_1.default)({
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 app.use(limiter);
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
+// Socket.io Authentication Middleware
+exports.io.use((socket, next) => {
+    const token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(' ')[1];
+    if (!token) {
+        return next(new Error('Authentication error: Token missing'));
+    }
+    try {
+        const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
+        socket.data = { userId: decoded.userId };
+        next();
+    }
+    catch (err) {
+        return next(new Error('Authentication error: Invalid or expired token'));
+    }
+});
 exports.io.on("connection", (socket) => {
-    console.log(`Socket connected: ${socket.id}`);
-    socket.on("join-board", (boardId) => {
-        socket.join(boardId);
-        console.log(`Socket ${socket.id} joined board ${boardId}`);
+    console.log(`Socket connected: ${socket.id} for user ${socket.data.userId}`);
+    socket.on("join-board", async (boardId) => {
+        try {
+            const board = await prisma_1.default.board.findUnique({
+                where: { id: boardId },
+                include: { members: true }
+            });
+            if (!board) {
+                console.warn(`[Socket] Board ${boardId} not found`);
+                return;
+            }
+            const isOwner = board.ownerId === socket.data.userId;
+            const isMember = board.members.some(m => m.userId === socket.data.userId);
+            if (!isOwner && !isMember) {
+                console.warn(`[Socket] Access denied to user ${socket.data.userId} for board ${boardId}`);
+                return;
+            }
+            socket.join(boardId);
+            console.log(`Socket ${socket.id} joined board ${boardId}`);
+        }
+        catch (error) {
+            console.error('[Socket] Error on join-board:', error);
+        }
     });
     socket.on("leave-board", (boardId) => {
         socket.leave(boardId);
         console.log(`Socket ${socket.id} left board ${boardId}`);
     });
     socket.on("join-user", (userId) => {
+        if (socket.data.userId !== userId) {
+            console.warn(`[Socket] User ${socket.data.userId} tried to join private user room ${userId}`);
+            return;
+        }
         socket.join(userId);
         console.log(`Socket ${socket.id} joined user room ${userId}`);
     });

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unassignUser = exports.assignUser = exports.deleteCard = exports.updateCard = exports.createCard = void 0;
+exports.searchCards = exports.unassignUser = exports.assignUser = exports.deleteCard = exports.updateCard = exports.createCard = void 0;
 const prisma_1 = __importDefault(require("../prisma"));
 const AppError_1 = require("../utils/AppError");
 const catchAsync_1 = require("../utils/catchAsync");
@@ -132,4 +132,54 @@ exports.unassignUser = (0, catchAsync_1.catchAsync)(async (req, res) => {
     const io = req.app.get('io');
     io.to(card.list.boardId).emit('board-updated');
     res.status(204).send();
+});
+exports.searchCards = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const { q, labelIds, assignedTo, boardId, isDone, page = '1', limit = '20' } = req.query;
+    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+    const take = Math.min(parseInt(limit, 10) || 20, 100);
+    const skip = (pageNum - 1) * take;
+    const where = {};
+    // Board filter via list
+    if (boardId) {
+        where.list = { boardId: boardId };
+    }
+    // Text search on title/description
+    if (q) {
+        where.AND = where.AND || [];
+        where.AND.push({
+            OR: [
+                { title: { contains: q, mode: 'insensitive' } },
+                { description: { contains: q, mode: 'insensitive' } }
+            ]
+        });
+    }
+    // Label filter (comma separated ids)
+    if (labelIds) {
+        const ids = labelIds.split(',').map(s => s.trim()).filter(Boolean);
+        if (ids.length) {
+            where.labels = { some: { labelId: { in: ids } } };
+        }
+    }
+    // Assigned to filter
+    if (assignedTo) {
+        where.assignees = { some: { userId: assignedTo } };
+    }
+    if (isDone === 'true' || isDone === 'false') {
+        where.isDone = isDone === 'true';
+    }
+    const [cards, total] = await Promise.all([
+        prisma_1.default.card.findMany({
+            where,
+            include: {
+                list: true,
+                labels: { include: { label: true } },
+                assignees: { include: { user: { select: { id: true, name: true, avatar: true } } } }
+            },
+            orderBy: { updatedAt: 'desc' },
+            skip,
+            take
+        }),
+        prisma_1.default.card.count({ where })
+    ]);
+    res.json({ data: cards, meta: { total, page: pageNum, limit: take } });
 });
