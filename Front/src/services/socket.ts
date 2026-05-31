@@ -8,8 +8,10 @@ class SocketService {
 
     connect() {
         if (!this.socket) {
+            const token = localStorage.getItem('padz_token');
             this.socket = io(SOCKET_URL, {
                 transports: ['websocket', 'polling'],
+                auth: { token }
             });
 
             this.socket.on('connect', () => {

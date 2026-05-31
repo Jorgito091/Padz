@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unassignUserParamsSchema = exports.assignUserSchema = exports.deleteCardSchema = exports.updateCardSchema = exports.createCardSchema = void 0;
+exports.searchCardsSchema = exports.unassignUserParamsSchema = exports.assignUserSchema = exports.deleteCardSchema = exports.updateCardSchema = exports.createCardSchema = void 0;
 const zod_1 = require("zod");
 exports.createCardSchema = zod_1.z.object({
     body: zod_1.z.object({
@@ -36,5 +36,16 @@ exports.unassignUserParamsSchema = zod_1.z.object({
     params: zod_1.z.object({
         cardId: zod_1.z.string().uuid(),
         userId: zod_1.z.string().uuid()
+    })
+});
+exports.searchCardsSchema = zod_1.z.object({
+    query: zod_1.z.object({
+        q: zod_1.z.string().optional(),
+        labelIds: zod_1.z.string().optional(), // comma separated label ids
+        assignedTo: zod_1.z.string().uuid().optional(),
+        boardId: zod_1.z.string().uuid().optional(),
+        isDone: zod_1.z.string().optional(), // 'true'|'false'
+        page: zod_1.z.string().optional(),
+        limit: zod_1.z.string().optional()
     })
 });
