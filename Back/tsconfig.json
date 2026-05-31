@@ -16,9 +16,9 @@
         "baseUrl": "."
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "tests/**/*.ts"
     ],
-    "exclude": [
-        "node_modules"
-    ]
+    "types": ["node", "jest"],
+
 }
