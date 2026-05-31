@@ -40,22 +40,22 @@ async function testOwnership() {
         const userAEmail = `usera_${Date.now()}@test.com`;
         const userARes = await axios.post(`${BASE_URL}/auth/register`, {
             email: userAEmail,
-            password: 'password123',
+            password: 'Password123!',
             name: 'User A'
         }).catch(err => {
             console.error('Registration A failed:', err.response ? err.response.data : err.message);
             throw err;
         });
-        const tokenA = userARes.data.token;
+        const tokenA = userARes.data.accessToken;
 
         // 2. Create User B
         console.log('Registering User B...');
         const userBRes = await axios.post(`${BASE_URL}/auth/register`, {
             email: `userb_${Date.now()}@test.com`,
-            password: 'password123',
+            password: 'Password123!',
             name: 'User B'
         });
-        const tokenB = userBRes.data.token;
+        const tokenB = userBRes.data.accessToken;
         const userBId = userBRes.data.user.id;
 
         // 3. User A creates Board A
