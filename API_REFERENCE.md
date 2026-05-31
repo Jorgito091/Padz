@@ -6,6 +6,14 @@ Prefacio
 -------
 Los endpoints listados reflejan las rutas definidas en `Back/src/routes/` y los controladores en `Back/src/controllers/`.
 
+## 📚 Contexto del Proyecto
+
+- **Objetivo**: Padz es una aplicación colaborativa tipo Trello que permite gestionar tableros, listas y tarjetas con notificaciones en tiempo real.
+- **Motivación**: Necesidad de una solución auto‑hosteada, segura y extensible sin depender de SaaS externos.
+- **Estado actual**: 85 % de funcionalidades completadas, CI/CD configurado, Docker‑Compose funcional. Falta implementar despliegue a staging y tests de integración auth↔socket.
+- **Tecnologías clave**: Backend Express 5 + TypeScript + Prisma, Frontend React 18 + Vite + TailwindCSS, PostgreSQL, Socket.io, JWT.
+- **Riesgos principales**: desalineación de ramas `dev`/`main`, exposición accidental de secretos, migraciones de base de datos sin backups.
+
 Base URL (desarrollo): http://localhost:3001/api
 
 Autenticación

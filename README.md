@@ -164,6 +164,32 @@ Este proyecto está bajo la licencia **MIT**. Ver el archivo [LICENSE](LICENSE) 
 
 ---
 
+## Contexto del Proyecto
+
+- **¿Qué estamos construyendo?** Padz, una aplicación tipo Trello con gestión de tableros, listas y tarjetas, autenticación JWT, notificaciones en tiempo real vía WebSocket y una UI premium (modo oscuro, glassmorphism, animaciones).
+- **¿Por qué lo construimos?** Necesitamos una herramienta auto‑hosteada, segura y extensible para la gestión colaborativa de tareas, sin depender de SaaS externos.
+- **¿Qué ya funciona?** Autenticación, CRUD completo de tableros/listas/tarjetas, sockets de notificación, Docker‑Compose local, CI (lint, test, build), README y Swagger.
+- **¿Qué falta?** Tests de integración auth ↔ socket, pipeline de despliegue a staging (Docker + Nginx + HTTPS), logging estructurado con pino, métricas Prometheus, documentación de contribución, versionado automático y Storybook.
+- **Problemas conocidos**: conflictos de merge previos, falta de pruebas de integración, manejo manual de git push (refspecs erróneos).
+- **Próxima tarea recomendada**: crear pipeline de despliegue a staging y añadir tests de integración de autenticación y sockets.
+
+---
+
+## 📋 Mejoras pendientes
+
+- **Tests de integración** (auth ↔ socket) – alta prioridad.
+- **Pipeline de despliegue a staging** (Docker + Nginx + HTTPS).
+- **Logging estructurado** con `pino` y exportar logs en formato JSON.
+- **Métricas y monitoreo** con Prometheus + Grafana.
+- **Documentación de contribución** (`CONTRIBUTING.md`).
+- **Versionado automático** con `semantic-release`.
+- **Storybook** para componentes UI.
+- **Exportar datos** (CSV/JSON) de tableros y tarjetas.
+- **Gestión de backups** de base de datos.
+- **Mejorar accesibilidad** (ARIA, contraste).
+
+---
+
 ## 📚 Índice
 - Instalación
 - Ejecución local
