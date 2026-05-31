@@ -40,7 +40,7 @@ async function testOwnership() {
         const userAEmail = `usera_${Date.now()}@test.com`;
         const userARes = await axios.post(`${BASE_URL}/auth/register`, {
             email: userAEmail,
-            password: 'password123',
+            password: 'Password123!',
             name: 'User A'
         }).catch(err => {
             console.error('Registration A failed:', err.response ? err.response.data : err.message);
@@ -52,7 +52,7 @@ async function testOwnership() {
         console.log('Registering User B...');
         const userBRes = await axios.post(`${BASE_URL}/auth/register`, {
             email: `userb_${Date.now()}@test.com`,
-            password: 'password123',
+            password: 'Password123!',
             name: 'User B'
         });
         const tokenB = userBRes.data.accessToken;
