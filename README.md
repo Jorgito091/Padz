@@ -153,3 +153,4 @@ Este proyecto está bajo la licencia **MIT**. Ver el archivo [LICENSE](LICENSE) 
 - **Autor**: Jorgito091
 - **GitHub**: https://github.com/Jorgito091
 - **Issues**: Abre un *issue* para reportar bugs o solicitar mejoras.
+- **Version**: 1.0.0
