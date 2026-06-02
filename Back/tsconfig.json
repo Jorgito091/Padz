@@ -16,9 +16,11 @@
         "baseUrl": "."
     },
     "include": [
-        "src/**/*",
-        "tests/**/*.ts"
+        "src/**/*"
     ],
-    "types": ["node", "jest"],
-
+    "exclude": [
+        "node_modules",
+        "tests"
+    ],
+    "types": ["node", "jest"]
 }

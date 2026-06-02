@@ -1,7 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 
 // Define the API URL (should match your backend URL)
-const SOCKET_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3001';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
 
 class SocketService {
     private socket: Socket | null = null;

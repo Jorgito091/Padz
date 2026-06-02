@@ -138,6 +138,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                                         assignees={card.assignees}
                                         dueDate={card.dueDate}
                                         isDone={card.isDone}
+                                        checklists={card.checklists}
                                     />
                                 ))}
                             </div>

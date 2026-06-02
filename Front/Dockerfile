@@ -1,15 +1,21 @@
-# Use a lightweight node image for the build stage
+# syntax=docker/dockerfile:1
+
 FROM node:22-alpine AS builder
 WORKDIR /app
 
-# Install dependencies (including dev for build)
-COPY package*.json ./
-RUN npm ci
+COPY package.json package-lock.json ./
 
-# Copy source code
+RUN --mount=type=cache,target=/root/.npm \
+    npm config set fetch-timeout 300000 && \
+    npm ci --no-audit --fund=false --loglevel=info
+
 COPY . .
 
-# Build the Vite app (produces ./dist)
+ARG VITE_API_URL=http://localhost:4000/api
+ARG VITE_SOCKET_URL=http://localhost:4000
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_SOCKET_URL=$VITE_SOCKET_URL
+
 RUN npm run build
 
 # Production image

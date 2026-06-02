@@ -4,6 +4,7 @@ import { X, Plus, Trash2, Send, Pencil, Mail, Check } from 'lucide-react';
 import { Card, Board, CommentData, LabelData } from '../../types';
 import api from '../../services/api';
 import Logo from '../Logo';
+import { CardChecklists } from '../card/CardChecklists';
 
 interface CardDetailModalProps {
     card: Card;
@@ -280,6 +281,8 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({ card, board, u
                                     placeholder={canEdit ? "Añade una descripción más detallada sobre esta tarea..." : "Sin descripción."}
                                 />
                             </div>
+
+                            <CardChecklists cardId={card.id} canEdit={canEdit} onUpdate={onUpdate} />
 
                             {/* Comments Section */}
                             <div className="space-y-4">

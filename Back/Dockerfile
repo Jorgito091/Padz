@@ -1,32 +1,48 @@
-FROM node:22-bullseye AS builder
+# syntax=docker/dockerfile:1
+
+FROM node:22-bookworm-slim AS deps
 WORKDIR /app
 
-# Install dependencies (using lock file for reproducibility)
-COPY package*.json ./
-RUN npm ci --omit=dev
+COPY package.json package-lock.json ./
 
-# Copy source files
-COPY . .
+# Cache de npm + timeouts largos (Prisma descarga engines en postinstall y parece "colgado")
+RUN --mount=type=cache,target=/root/.npm \
+    npm config set fetch-timeout 300000 && \
+    npm config set fetch-retries 5 && \
+    npm ci --no-audit --fund=false --loglevel=info
 
-# Generate Prisma client (required for runtime)
+FROM deps AS builder
+
+COPY prisma ./prisma
 RUN npx prisma generate
 
-# Build TypeScript (if any)
-RUN npm run build || echo "No build script defined"
+COPY tsconfig.json ./
+COPY src ./src
+RUN npm run build
 
-# Runtime image
-FROM node:22-bullseye
+FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 
-# Copy only production dependencies from builder
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/prisma ./prisma
+ENV NODE_ENV=production
+ENV PORT=4000
+
+COPY package.json package-lock.json ./
+
+# Producción + Prisma CLI (migrate deploy en entrypoint.sh)
+RUN --mount=type=cache,target=/root/.npm \
+    npm config set fetch-timeout 300000 && \
+    npm config set fetch-retries 5 && \
+    npm ci --omit=dev --no-audit --fund=false --loglevel=info && \
+    npm install prisma@5.22.0 --no-save --no-audit --loglevel=info
+
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
+
 COPY entrypoint.sh ./
 RUN chmod +x entrypoint.sh
 
-# Expose port (adjust if needed)
 EXPOSE 4000
 
-# Start the server
 ENTRYPOINT ["./entrypoint.sh"]

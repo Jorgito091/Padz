@@ -2,7 +2,9 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
-import { Pencil, Trash2, Clock, CheckCircle2 } from 'lucide-react';
+import { Pencil, Trash2, Clock, CheckCircle2, ListChecks } from 'lucide-react';
+import { ChecklistData } from '../types';
+import { getChecklistProgress } from './card/CardChecklists';
 
 interface CardProps {
     id: string;
@@ -15,9 +17,11 @@ interface CardProps {
     assignees?: { user: { id: string, name: string, avatar?: string } }[];
     dueDate?: string;
     isDone?: boolean;
+    checklists?: ChecklistData[];
 }
 
-export const SortableCard: React.FC<CardProps> = ({ id, title, description, onClick, onEdit, onDelete, labels, assignees, dueDate, isDone }) => {
+export const SortableCard: React.FC<CardProps> = ({ id, title, description, onClick, onEdit, onDelete, labels, assignees, dueDate, isDone, checklists }) => {
+    const checklistProgress = getChecklistProgress(checklists);
     const {
         attributes,
         listeners,
@@ -61,7 +65,17 @@ export const SortableCard: React.FC<CardProps> = ({ id, title, description, onCl
                         )}
 
                         <div className="flex items-center justify-between mt-3">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                {checklistProgress && (
+                                    <div className={`flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded border ${
+                                        checklistProgress.done === checklistProgress.total
+                                            ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                                            : 'bg-white/5 text-gray-400 border-white/10'
+                                    }`}>
+                                        <ListChecks size={10} />
+                                        <span>{checklistProgress.done}/{checklistProgress.total}</span>
+                                    </div>
+                                )}
                                 {dueDate && (
                                     <div className={`flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm transition-all ${isDone
                                         ? 'bg-green-500/20 text-green-400 border border-green-500/30'

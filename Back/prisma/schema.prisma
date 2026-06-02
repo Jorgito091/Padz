@@ -66,6 +66,29 @@ model Card {
   dueDate     DateTime?
   isDone      Boolean        @default(false)
   assignees   CardAssignee[]
+  checklists  Checklist[]
+}
+
+model Checklist {
+  id        String          @id @default(uuid())
+  title     String          @default("Subtareas")
+  order     Int             @default(0)
+  cardId    String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  card      Card            @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  items     ChecklistItem[]
+}
+
+model ChecklistItem {
+  id          String    @id @default(uuid())
+  title       String
+  isDone      Boolean   @default(false)
+  order       Int       @default(0)
+  checklistId String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  checklist   Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
 }
 
 model Label {

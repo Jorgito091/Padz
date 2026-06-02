@@ -21,6 +21,22 @@ export interface Notification {
     createdAt: string;
 }
 
+export interface ChecklistItemData {
+    id: string;
+    title: string;
+    isDone: boolean;
+    order: number;
+    checklistId: string;
+}
+
+export interface ChecklistData {
+    id: string;
+    title: string;
+    order: number;
+    cardId: string;
+    items: ChecklistItemData[];
+}
+
 export interface CommentData {
     id: string;
     text: string;
@@ -51,6 +67,7 @@ export interface Card {
     }[];
     dueDate?: string;
     isDone?: boolean;
+    checklists?: ChecklistData[];
 }
 
 export interface List {

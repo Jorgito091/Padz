@@ -16,6 +16,7 @@ import memberRoutes from './routes/memberRoutes';
 import commentRoutes from './routes/commentRoutes';
 import labelRoutes from './routes/labelRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import checklistRoutes from './routes/checklistRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -127,6 +128,7 @@ export function createApp() {
   app.use('/api/comments', commentRoutes);
   app.use('/api/labels', labelRoutes);
   app.use('/api/notifications', notificationRoutes);
+  app.use('/api/checklists', checklistRoutes);
 
   // Health endpoint
   app.get('/health', (req, res) => {

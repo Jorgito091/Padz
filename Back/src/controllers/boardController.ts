@@ -139,6 +139,13 @@ export const getBoardById = catchAsync(async (req: AuthRequest, res: Response) =
                                         }
                                     }
                                 }
+                            },
+                            checklists: {
+                                include: {
+                                    items: {
+                                        select: { id: true, isDone: true }
+                                    }
+                                }
                             }
                         },
                         orderBy: { order: 'asc' }
