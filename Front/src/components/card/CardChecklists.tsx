@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { CheckSquare, Plus, Trash2, Loader2, Pencil, AlertCircle, X, Check } from 'lucide-react';
+import {
+    Plus,
+    Trash2,
+    Loader2,
+    Pencil,
+    AlertCircle,
+    X,
+    Check,
+    ListTodo,
+} from 'lucide-react';
 import api from '../../services/api';
 import { ChecklistData } from '../../types';
 
@@ -28,6 +37,30 @@ function getApiErrorMessage(error: unknown): string {
     if (status === 401) return 'Sesión expirada. Vuelve a iniciar sesión.';
     if (status === 500) return 'Error en el servidor. ¿Aplicaste las migraciones de la base de datos?';
     return msg || err.message || 'No se pudo conectar con el servidor.';
+}
+
+function listProgress(checklist: ChecklistData) {
+    const total = checklist.items.length;
+    const done = checklist.items.filter((i) => i.isDone).length;
+    return { done, total, percent: total ? Math.round((done / total) * 100) : 0 };
+}
+
+function ProgressBar({ done, total, className = '' }: { done: number; total: number; className?: string }) {
+    if (total === 0) return null;
+    const percent = (done / total) * 100;
+    return (
+        <div className={`flex items-center gap-2 ${className}`}>
+            <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden min-w-[72px]">
+                <div
+                    className="h-full bg-gradient-to-r from-orange-600 to-orange-400 transition-all duration-300"
+                    style={{ width: `${percent}%` }}
+                />
+            </div>
+            <span className="text-[10px] font-bold text-gray-500 tabular-nums shrink-0">
+                {done}/{total}
+            </span>
+        </div>
+    );
 }
 
 export const CardChecklists: React.FC<CardChecklistsProps> = ({ cardId, canEdit, onUpdate }) => {
@@ -254,275 +287,361 @@ export const CardChecklists: React.FC<CardChecklistsProps> = ({ cardId, canEdit,
 
     if (loading) {
         return (
-            <div className="flex items-center gap-2 text-gray-500 text-sm py-4">
-                <Loader2 size={16} className="animate-spin" />
-                Cargando subtareas...
-            </div>
+            <section className="rounded-2xl border border-white/5 bg-white/[0.02] p-5">
+                <div className="flex items-center gap-2 text-gray-500 text-sm">
+                    <Loader2 size={16} className="animate-spin text-orange-500" />
+                    Cargando subtareas...
+                </div>
+            </section>
         );
     }
 
     return (
-        <div className="space-y-4">
-            <label className="flex items-center gap-2 text-sm font-bold text-gray-400 uppercase tracking-widest">
-                <CheckSquare size={16} /> Subtareas
-                {totalItems > 0 && (
-                    <span className="text-[10px] font-bold text-orange-400 normal-case tracking-normal">
-                        {doneItems}/{totalItems}
-                    </span>
+        <section className="rounded-2xl border border-white/5 bg-white/[0.02] overflow-hidden">
+            {/* Cabecera de sección */}
+            <div className="px-5 py-4 border-b border-white/5 bg-white/[0.02]">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-orange-500/15 text-orange-400">
+                            <ListTodo size={16} />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-white leading-none">Subtareas</h3>
+                            <p className="text-[10px] text-gray-500 mt-1">
+                                {checklists.length === 0
+                                    ? 'Sin listas'
+                                    : `${checklists.length} lista${checklists.length > 1 ? 's' : ''}`}
+                            </p>
+                        </div>
+                    </div>
+                    {totalItems > 0 && (
+                        <div className="w-full sm:w-40">
+                            <ProgressBar done={doneItems} total={totalItems} />
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="p-5 space-y-4">
+                {(loadError || actionError) && (
+                    <div className="flex gap-2 items-start p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs leading-relaxed">
+                        <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                        <span>{actionError || loadError}</span>
+                    </div>
                 )}
-            </label>
 
-            {(loadError || actionError) && (
-                <div className="flex gap-2 items-start p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs leading-relaxed">
-                    <AlertCircle size={16} className="shrink-0 mt-0.5" />
-                    <span>{actionError || loadError}</span>
-                </div>
-            )}
+                {!canEdit && (
+                    <p className="text-xs text-gray-500 text-center py-2">Solo lectura</p>
+                )}
 
-            {!canEdit && (
-                <p className="text-xs text-gray-500">Solo lectura: no puedes crear ni editar subtareas.</p>
-            )}
+                {checklists.length === 0 && !loadError && (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                        Crea una lista para organizar pasos dentro de esta tarjeta.
+                    </p>
+                )}
 
-            {totalItems > 0 && (
-                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                    <div
-                        className="h-full bg-gradient-to-r from-orange-600 to-orange-400 transition-all duration-300"
-                        style={{ width: `${(doneItems / totalItems) * 100}%` }}
-                    />
-                </div>
-            )}
+                {/* Listas */}
+                <div className="space-y-3">
+                    {checklists.map((checklist) => {
+                        const isEditing = editingChecklistId === checklist.id && editDraft;
+                        const progress = listProgress(checklist);
 
-            {checklists.map((checklist) => {
-                const isEditing = editingChecklistId === checklist.id && editDraft;
-
-                return (
-                    <div
-                        key={checklist.id}
-                        className={`rounded-2xl p-4 space-y-3 border transition-all ${
-                            isEditing
-                                ? 'bg-orange-500/5 border-orange-500/40 ring-1 ring-orange-500/20'
-                                : 'bg-white/[0.03] border-white/5'
-                        }`}
-                    >
-                        {isEditing ? (
-                            <>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">
-                                        Nombre de la lista
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={editDraft.listTitle}
-                                        onChange={(e) =>
-                                            setEditDraft({ ...editDraft, listTitle: e.target.value })
+                        return (
+                            <article
+                                key={checklist.id}
+                                className={`rounded-xl border overflow-hidden transition-all ${
+                                    isEditing
+                                        ? 'border-orange-500/40 bg-orange-500/[0.04] shadow-[0_0_0_1px_rgba(249,115,22,0.15)]'
+                                        : 'border-white/5 bg-white/[0.03]'
+                                }`}
+                            >
+                                {isEditing ? (
+                                    <EditChecklistPanel
+                                        checklist={checklist}
+                                        editDraft={editDraft}
+                                        isSaving={isSavingEdit}
+                                        onDraftChange={setEditDraft}
+                                        onSave={handleSaveEdit}
+                                        onCancel={cancelEditing}
+                                        onRemoveItem={(itemId) =>
+                                            handleDeleteItem(checklist.id, itemId)
                                         }
-                                        maxLength={100}
-                                        className="w-full bg-white/5 border border-orange-500/30 rounded-xl px-3 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                                        placeholder="Ej: Compras, Tareas del proyecto..."
                                     />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                                        Subtareas de esta lista
-                                    </label>
-                                    {checklist.items
-                                        .filter((item) => !editDraft.removedItemIds.includes(item.id))
-                                        .map((item) => (
-                                        <div key={item.id} className="flex items-center gap-2">
-                                            <input
-                                                type="text"
-                                                value={editDraft.items[item.id] ?? item.title}
-                                                onChange={(e) =>
-                                                    setEditDraft({
-                                                        ...editDraft,
-                                                        items: {
-                                                            ...editDraft.items,
-                                                            [item.id]: e.target.value,
-                                                        },
-                                                    })
-                                                }
-                                                maxLength={500}
-                                                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500/40"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDeleteItem(checklist.id, item.id)}
-                                                className="p-2 text-gray-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-all"
-                                                title="Eliminar subtarea (se aplica al guardar)"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="text"
-                                            value={editDraft.newItem}
-                                            onChange={(e) =>
-                                                setEditDraft({ ...editDraft, newItem: e.target.value })
-                                            }
-                                            placeholder="Nueva subtarea (se crea al guardar)..."
-                                            className="flex-1 bg-white/5 border border-dashed border-white/15 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500/40"
-                                        />
-                                        <Plus size={14} className="text-gray-600 shrink-0" />
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
-                                    <button
-                                        type="button"
-                                        onClick={handleSaveEdit}
-                                        disabled={isSavingEdit}
-                                        className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all"
-                                    >
-                                        {isSavingEdit ? (
-                                            <Loader2 size={14} className="animate-spin" />
-                                        ) : (
-                                            <Check size={14} />
-                                        )}
-                                        Guardar cambios
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={cancelEditing}
-                                        disabled={isSavingEdit}
-                                        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-400 rounded-xl text-xs font-bold transition-all"
-                                    >
-                                        <X size={14} /> Cancelar
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div className="flex items-start justify-between gap-3">
-                                    <h4 className="text-sm font-bold text-white flex-1">{checklist.title}</h4>
-                                    {canEdit && (
-                                        <div className="flex items-center gap-1 shrink-0">
-                                            <button
-                                                type="button"
-                                                onClick={() => startEditing(checklist)}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-600/20 hover:bg-orange-600/40 text-orange-300 border border-orange-500/30 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all"
-                                                title="Editar nombre y subtareas"
-                                            >
-                                                <Pencil size={12} /> Editar
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDeleteChecklist(checklist.id)}
-                                                className="p-1.5 text-gray-600 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-all"
-                                                title="Eliminar lista"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <ul className="space-y-2">
-                                    {checklist.items.length === 0 && (
-                                        <li className="text-xs text-gray-600 italic py-1">
-                                            Sin subtareas. Pulsa Editar para añadirlas.
-                                        </li>
-                                    )}
-                                    {checklist.items.map((item) => (
-                                        <li key={item.id} className="flex items-start gap-3 group">
-                                            <button
-                                                type="button"
-                                                disabled={!canEdit}
-                                                onClick={() => handleToggleItem(item.id, item.isDone)}
-                                                className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
-                                                    item.isDone
-                                                        ? 'bg-green-500 border-green-400 text-white'
-                                                        : 'border-white/20 hover:border-orange-500/50'
-                                                } ${!canEdit ? 'cursor-default opacity-60' : ''}`}
-                                            >
-                                                {item.isDone && <CheckSquare size={12} />}
-                                            </button>
-                                            <span
-                                                className={`flex-1 text-sm leading-relaxed ${
-                                                    item.isDone
-                                                        ? 'text-gray-500 line-through'
-                                                        : 'text-gray-300'
-                                                }`}
-                                            >
-                                                {item.title}
-                                            </span>
-                                        </li>
-                                    ))}
-                                </ul>
-
-                                {canEdit && (
-                                    <QuickAddRow
-                                        checklistId={checklist.id}
-                                        isLoading={addingItemChecklistId === checklist.id}
-                                        onAdd={handleQuickAddItem}
+                                ) : (
+                                    <ViewChecklistPanel
+                                        checklist={checklist}
+                                        progress={progress}
+                                        canEdit={canEdit}
+                                        isAddingItem={addingItemChecklistId === checklist.id}
+                                        onEdit={() => startEditing(checklist)}
+                                        onDelete={() => handleDeleteChecklist(checklist.id)}
+                                        onToggleItem={handleToggleItem}
+                                        onQuickAdd={(title) => handleQuickAddItem(checklist.id, title)}
                                     />
                                 )}
-                            </>
-                        )}
-                    </div>
-                );
-            })}
+                            </article>
+                        );
+                    })}
+                </div>
 
-            {canEdit && (
-                <form
-                    onSubmit={handleCreateChecklist}
-                    className="bg-white/[0.02] border border-dashed border-white/10 rounded-2xl p-4 space-y-3"
-                >
-                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                        Nueva lista de subtareas
-                    </p>
-                    <div className="flex gap-2">
+                {/* Nueva lista */}
+                {canEdit && (
+                    <form
+                        onSubmit={handleCreateChecklist}
+                        className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-white/5"
+                    >
                         <input
                             type="text"
                             value={newListTitle}
                             onChange={(e) => setNewListTitle(e.target.value)}
-                            placeholder="Ej: Compras, Paso a paso..."
+                            placeholder="Nueva lista (ej. Compras, Sprint)..."
                             maxLength={100}
-                            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500/40"
+                            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/40"
                         />
                         <button
                             type="submit"
                             disabled={isCreatingList}
-                            className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0"
+                            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all shrink-0"
                         >
                             {isCreatingList ? (
-                                <Loader2 size={14} className="animate-spin" />
+                                <Loader2 size={16} className="animate-spin" />
                             ) : (
-                                <Plus size={14} />
+                                <Plus size={16} />
                             )}
-                            Crear
+                            Nueva lista
                         </button>
-                    </div>
-                    <p className="text-[10px] text-gray-600">
-                        Al crear, se abre el modo edición para nombrar la lista y añadir subtareas.
-                    </p>
-                </form>
-            )}
-        </div>
+                    </form>
+                )}
+            </div>
+        </section>
     );
 };
 
+/* ——— Vista normal de una lista ——— */
+
+function ViewChecklistPanel({
+    checklist,
+    progress,
+    canEdit,
+    isAddingItem,
+    onEdit,
+    onDelete,
+    onToggleItem,
+    onQuickAdd,
+}: {
+    checklist: ChecklistData;
+    progress: { done: number; total: number; percent: number };
+    canEdit: boolean;
+    isAddingItem: boolean;
+    onEdit: () => void;
+    onDelete: () => void;
+    onToggleItem: (id: string, isDone: boolean) => void;
+    onQuickAdd: (title: string) => Promise<void>;
+}) {
+    return (
+        <>
+            <header className="px-4 py-3 flex items-center gap-3 border-b border-white/5 bg-white/[0.02]">
+                <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-semibold text-white truncate">{checklist.title}</h4>
+                    {progress.total > 0 && (
+                        <div className="mt-2">
+                            <ProgressBar done={progress.done} total={progress.total} />
+                        </div>
+                    )}
+                </div>
+                {canEdit && (
+                    <div className="flex items-center gap-1 shrink-0">
+                        <button
+                            type="button"
+                            onClick={onEdit}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-orange-300 bg-orange-500/15 hover:bg-orange-500/25 border border-orange-500/20 transition-all"
+                        >
+                            <Pencil size={13} /> Editar
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onDelete}
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                            title="Eliminar lista"
+                        >
+                            <Trash2 size={15} />
+                        </button>
+                    </div>
+                )}
+            </header>
+
+            <div className="px-2 py-2">
+                {checklist.items.length === 0 ? (
+                    <p className="text-xs text-gray-600 text-center py-3 px-2">
+                        Vacía — usa <span className="text-orange-400/90">Editar</span> o añade abajo.
+                    </p>
+                ) : (
+                    <ul className="divide-y divide-white/5">
+                        {checklist.items.map((item) => (
+                            <li key={item.id}>
+                                <div className="flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-white/[0.03] group transition-colors">
+                                    <button
+                                        type="button"
+                                        disabled={!canEdit}
+                                        onClick={() => onToggleItem(item.id, item.isDone)}
+                                        className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                                            item.isDone
+                                                ? 'bg-green-500 border-green-400 text-white'
+                                                : 'border-white/25 hover:border-orange-500/60 bg-white/5'
+                                        } ${!canEdit ? 'opacity-50 cursor-default' : ''}`}
+                                    >
+                                        {item.isDone && <Check size={12} strokeWidth={3} />}
+                                    </button>
+                                    <span
+                                        className={`flex-1 text-sm leading-snug ${
+                                            item.isDone
+                                                ? 'text-gray-500 line-through'
+                                                : 'text-gray-200'
+                                        }`}
+                                    >
+                                        {item.title}
+                                    </span>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+
+            {canEdit && (
+                <footer className="px-3 pb-3 pt-1">
+                    <QuickAddRow isLoading={isAddingItem} onAdd={onQuickAdd} />
+                </footer>
+            )}
+        </>
+    );
+}
+
+/* ——— Modo edición ——— */
+
+function EditChecklistPanel({
+    checklist,
+    editDraft,
+    isSaving,
+    onDraftChange,
+    onSave,
+    onCancel,
+    onRemoveItem,
+}: {
+    checklist: ChecklistData;
+    editDraft: EditDraft;
+    isSaving: boolean;
+    onDraftChange: (draft: EditDraft) => void;
+    onSave: () => void;
+    onCancel: () => void;
+    onRemoveItem: (itemId: string) => void;
+}) {
+    const visibleItems = checklist.items.filter(
+        (item) => !editDraft.removedItemIds.includes(item.id)
+    );
+
+    return (
+        <>
+            <header className="px-4 py-3 border-b border-orange-500/20 bg-orange-500/10">
+                <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">
+                    Editando lista
+                </span>
+                <input
+                    type="text"
+                    value={editDraft.listTitle}
+                    onChange={(e) => onDraftChange({ ...editDraft, listTitle: e.target.value })}
+                    maxLength={100}
+                    className="mt-2 w-full bg-black/20 border border-orange-500/30 rounded-lg px-3 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                    placeholder="Nombre de la lista"
+                />
+            </header>
+
+            <div className="px-4 py-3 space-y-2 max-h-52 overflow-y-auto custom-scrollbar">
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Subtareas ({visibleItems.length})
+                </p>
+                {visibleItems.length === 0 && (
+                    <p className="text-xs text-gray-600 py-2">Añade subtareas abajo.</p>
+                )}
+                {visibleItems.map((item) => (
+                    <div key={item.id} className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-md border border-white/10 bg-white/5 shrink-0 flex items-center justify-center">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-600" />
+                        </span>
+                        <input
+                            type="text"
+                            value={editDraft.items[item.id] ?? item.title}
+                            onChange={(e) =>
+                                onDraftChange({
+                                    ...editDraft,
+                                    items: { ...editDraft.items, [item.id]: e.target.value },
+                                })
+                            }
+                            maxLength={500}
+                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500/40"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => onRemoveItem(item.id)}
+                            className="p-2 text-gray-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-all shrink-0"
+                            title="Quitar"
+                        >
+                            <Trash2 size={14} />
+                        </button>
+                    </div>
+                ))}
+                <div className="flex items-center gap-2 pt-1">
+                    <Plus size={14} className="text-orange-500/70 shrink-0" />
+                    <input
+                        type="text"
+                        value={editDraft.newItem}
+                        onChange={(e) => onDraftChange({ ...editDraft, newItem: e.target.value })}
+                        placeholder="Nueva subtarea..."
+                        className="flex-1 bg-white/5 border border-dashed border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/40"
+                    />
+                </div>
+            </div>
+
+            <footer className="px-4 py-3 flex flex-wrap gap-2 border-t border-orange-500/20 bg-black/10">
+                <button
+                    type="button"
+                    onClick={onSave}
+                    disabled={isSaving}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all"
+                >
+                    {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                    Guardar
+                </button>
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    disabled={isSaving}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-400 rounded-xl text-xs font-bold transition-all"
+                >
+                    <X size={14} /> Cancelar
+                </button>
+            </footer>
+        </>
+    );
+}
+
 function QuickAddRow({
-    checklistId,
     isLoading,
     onAdd,
 }: {
-    checklistId: string;
     isLoading: boolean;
-    onAdd: (checklistId: string, title: string) => Promise<void>;
+    onAdd: (title: string) => Promise<void>;
 }) {
     const [text, setText] = useState('');
 
     const submit = async () => {
         if (!text.trim()) return;
-        await onAdd(checklistId, text);
+        await onAdd(text);
         setText('');
     };
 
     return (
-        <div className="flex gap-2 pt-1">
+        <div className="flex gap-2">
             <input
                 type="text"
                 value={text}
@@ -533,16 +652,16 @@ function QuickAddRow({
                         submit();
                     }
                 }}
-                placeholder="Añadir subtarea rápida..."
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500/40"
+                placeholder="+ Añadir subtarea..."
+                className="flex-1 bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/30"
             />
             <button
                 type="button"
                 disabled={isLoading || !text.trim()}
                 onClick={submit}
-                className="px-3 py-2 bg-white/10 hover:bg-white/15 disabled:opacity-50 text-white rounded-xl transition-all"
+                className="px-3 py-2 rounded-lg bg-white/10 hover:bg-orange-600/30 hover:text-orange-200 disabled:opacity-40 text-gray-300 transition-all"
             >
-                {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
             </button>
         </div>
     );
