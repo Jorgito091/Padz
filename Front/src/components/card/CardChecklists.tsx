@@ -153,8 +153,12 @@ export const CardChecklists: React.FC<CardChecklistsProps> = ({ cardId, canEdit,
 
         try {
             if (listTitle !== checklist.title) {
-                await api.put(`/checklists/${editingChecklistId}`, { title: listTitle });
-            }
+    await api.put(`/checklists/${editingChecklistId}`, { title: listTitle, order: checklist.order });
+    // Optimistically update local state to reflect the new title
+    setChecklists(prev =>
+        prev.map(c => (c.id === editingChecklistId ? { ...c, title: listTitle } : c))
+    );
+}
 
             for (const itemId of editDraft.removedItemIds) {
                 await api.delete(`/checklists/items/${itemId}`);

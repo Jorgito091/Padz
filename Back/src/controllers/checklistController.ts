@@ -63,7 +63,10 @@ export const updateChecklist = catchAsync(async (req: AuthRequest, res: Response
 
     const checklist = await prisma.checklist.update({
         where: { id },
-        data: { title, order },
+        data: {
+            title,
+            order: order !== undefined ? order : existing.order,
+        },
         include: { items: { orderBy: { order: 'asc' } } },
     });
 
