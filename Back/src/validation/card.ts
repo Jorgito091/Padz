@@ -18,7 +18,7 @@ export const updateCardSchema = z.object({
     description: z.string().optional(),
     order: z.number().int().optional(),
     listId: z.string().uuid().optional(),
-    dueDate: z.string().datetime().optional(),
+    dueDate: z.string().datetime().nullable().optional(),
     isDone: z.boolean().optional()
   })
 });
