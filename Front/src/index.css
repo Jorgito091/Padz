@@ -2,18 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+:root.light {
   --bg-primary: #f5f2ec;
   --bg-secondary: #ffffff;
-  --text-primary: #ffffff;
+  --text-primary: #111111;
   --text-secondary: #6b6b6f;
+  --text-tertiary: #8b8b8f;
   --accent: #111111;
   --accent-hover: #000000;
   --card-bg: #ffffff;
+  --border: rgba(0, 0, 0, 0.1);
+  --sidebar-bg: #111111;
+  --sidebar-text: #ffffff;
+}
+
+:root.dark {
+  --bg-primary: #111111;
+  --bg-secondary: #1a1a1a;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --text-tertiary: #888888;
+  --accent: #ffffff;
+  --accent-hover: #e0e0e0;
+  --card-bg: #2a2a2a;
+  --border: rgba(255, 255, 255, 0.1);
+  --sidebar-bg: #0a0a0a;
+  --sidebar-text: #ffffff;
 }
 
 body {
-  @apply bg-[#f5f2ec] text-[#111111] font-sans antialiased;
+  @apply font-sans antialiased transition-colors duration-300;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   min-height: 100vh;
 }
 
