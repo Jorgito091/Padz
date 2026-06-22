@@ -50,13 +50,13 @@ function ProgressBar({ done, total, className = '' }: { done: number; total: num
     const percent = (done / total) * 100;
     return (
         <div className={`flex items-center gap-2 ${className}`}>
-            <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden min-w-[72px]">
+            <div className="flex-1 h-1.5 bg-[#f5f2ec] rounded-full overflow-hidden min-w-[72px] border border-black/10">
                 <div
-                    className="h-full bg-gradient-to-r from-orange-600 to-orange-400 transition-all duration-300"
+                    className="h-full bg-[#111111] transition-all duration-300"
                     style={{ width: `${percent}%` }}
                 />
             </div>
-            <span className="text-[10px] font-bold text-gray-500 tabular-nums shrink-0">
+            <span className="text-[10px] font-medium text-[#6b6b6f] tabular-nums shrink-0">
                 {done}/{total}
             </span>
         </div>
@@ -291,9 +291,9 @@ export const CardChecklists: React.FC<CardChecklistsProps> = ({ cardId, canEdit,
 
     if (loading) {
         return (
-            <section className="rounded-2xl border border-white/5 bg-white/[0.02] p-5">
-                <div className="flex items-center gap-2 text-gray-500 text-sm">
-                    <Loader2 size={16} className="animate-spin text-orange-500" />
+            <section className="rounded-2xl border border-black/10 bg-white p-5">
+                <div className="flex items-center gap-2 text-[#6b6b6f] text-sm">
+                    <Loader2 size={16} className="animate-spin text-[#111111]" />
                     Cargando subtareas...
                 </div>
             </section>
@@ -301,17 +301,17 @@ export const CardChecklists: React.FC<CardChecklistsProps> = ({ cardId, canEdit,
     }
 
     return (
-        <section className="rounded-2xl border border-white/5 bg-white/[0.02] overflow-hidden">
+        <section className="rounded-2xl border border-black/10 bg-white overflow-hidden">
             {/* Cabecera de sección */}
-            <div className="px-5 py-4 border-b border-white/5 bg-white/[0.02]">
+            <div className="px-5 py-4 border-b border-black/10 bg-[#f5f2ec]">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-lg bg-orange-500/15 text-orange-400">
+                        <div className="p-1.5 rounded-lg bg-white border border-black/10 text-[#111111]">
                             <ListTodo size={16} />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-white leading-none">Subtareas</h3>
-                            <p className="text-[10px] text-gray-500 mt-1">
+                            <h3 className="text-sm font-semibold text-[#111111] leading-none">Subtareas</h3>
+                            <p className="text-[10px] text-[#6b6b6f] mt-1">
                                 {checklists.length === 0
                                     ? 'Sin listas'
                                     : `${checklists.length} lista${checklists.length > 1 ? 's' : ''}`}
@@ -328,18 +328,18 @@ export const CardChecklists: React.FC<CardChecklistsProps> = ({ cardId, canEdit,
 
             <div className="p-5 space-y-4">
                 {(loadError || actionError) && (
-                    <div className="flex gap-2 items-start p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs leading-relaxed">
+                    <div className="flex gap-2 items-start p-3 rounded-xl bg-[#f5f2ec] border border-black/10 text-[#111111] text-xs leading-relaxed">
                         <AlertCircle size={16} className="shrink-0 mt-0.5" />
                         <span>{actionError || loadError}</span>
                     </div>
                 )}
 
                 {!canEdit && (
-                    <p className="text-xs text-gray-500 text-center py-2">Solo lectura</p>
+                    <p className="text-xs text-[#6b6b6f] text-center py-2">Solo lectura</p>
                 )}
 
                 {checklists.length === 0 && !loadError && (
-                    <p className="text-sm text-gray-500 text-center py-4">
+                    <p className="text-sm text-[#6b6b6f] text-center py-4">
                         Crea una lista para organizar pasos dentro de esta tarjeta.
                     </p>
                 )}
@@ -353,10 +353,10 @@ export const CardChecklists: React.FC<CardChecklistsProps> = ({ cardId, canEdit,
                         return (
                             <article
                                 key={checklist.id}
-                                className={`rounded-xl border overflow-hidden transition-all ${
+                                className={`rounded-xl border overflow-hidden transition-colors ${
                                     isEditing
-                                        ? 'border-orange-500/40 bg-orange-500/[0.04] shadow-[0_0_0_1px_rgba(249,115,22,0.15)]'
-                                        : 'border-white/5 bg-white/[0.03]'
+                                    ? 'border-black/20 bg-[#f5f2ec]'
+                                    : 'border-black/10 bg-white'
                                 }`}
                             >
                                 {isEditing ? (
@@ -392,7 +392,7 @@ export const CardChecklists: React.FC<CardChecklistsProps> = ({ cardId, canEdit,
                 {canEdit && (
                     <form
                         onSubmit={handleCreateChecklist}
-                        className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-white/5"
+                        className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-black/10"
                     >
                         <input
                             type="text"
@@ -400,12 +400,12 @@ export const CardChecklists: React.FC<CardChecklistsProps> = ({ cardId, canEdit,
                             onChange={(e) => setNewListTitle(e.target.value)}
                             placeholder="Nueva lista (ej. Compras, Sprint)..."
                             maxLength={100}
-                            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/40"
+                            className="flex-1 bg-[#f5f2ec] border border-black/10 rounded-xl px-4 py-2.5 text-sm text-[#111111] placeholder:text-[#8b8b8f] focus:outline-none focus:border-black/20"
                         />
                         <button
                             type="submit"
                             disabled={isCreatingList}
-                            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all shrink-0"
+                            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#111111] text-white disabled:opacity-50 rounded-xl text-sm font-medium transition-colors shrink-0"
                         >
                             {isCreatingList ? (
                                 <Loader2 size={16} className="animate-spin" />
@@ -444,9 +444,9 @@ function ViewChecklistPanel({
 }) {
     return (
         <>
-            <header className="px-4 py-3 flex items-center gap-3 border-b border-white/5 bg-white/[0.02]">
+            <header className="px-4 py-3 flex items-center gap-3 border-b border-black/10 bg-[#f5f2ec]">
                 <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-semibold text-white truncate">{checklist.title}</h4>
+                    <h4 className="text-sm font-semibold text-[#111111] truncate">{checklist.title}</h4>
                     {progress.total > 0 && (
                         <div className="mt-2">
                             <ProgressBar done={progress.done} total={progress.total} />
@@ -458,14 +458,14 @@ function ViewChecklistPanel({
                         <button
                             type="button"
                             onClick={onEdit}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-orange-300 bg-orange-500/15 hover:bg-orange-500/25 border border-orange-500/20 transition-all"
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#111111] bg-white hover:bg-[#f5f2ec] border border-black/10 transition-all"
                         >
                             <Pencil size={13} /> Editar
                         </button>
                         <button
                             type="button"
                             onClick={onDelete}
-                            className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                            className="p-1.5 rounded-lg text-[#6b6b6f] hover:text-[#111111] hover:bg-[#f5f2ec] transition-all"
                             title="Eliminar lista"
                         >
                             <Trash2 size={15} />
@@ -476,22 +476,22 @@ function ViewChecklistPanel({
 
             <div className="px-2 py-2">
                 {checklist.items.length === 0 ? (
-                    <p className="text-xs text-gray-600 text-center py-3 px-2">
-                        Vacía — usa <span className="text-orange-400/90">Editar</span> o añade abajo.
+                    <p className="text-xs text-[#6b6b6f] text-center py-3 px-2">
+                        Vacía - usa <span className="text-[#111111]">Editar</span> o añade abajo.
                     </p>
                 ) : (
-                    <ul className="divide-y divide-white/5">
+                    <ul className="divide-y divide-black/10">
                         {checklist.items.map((item) => (
                             <li key={item.id}>
-                                <div className="flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-white/[0.03] group transition-colors">
+                                <div className="flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-[#f5f2ec] group transition-colors">
                                     <button
                                         type="button"
                                         disabled={!canEdit}
                                         onClick={() => onToggleItem(item.id, item.isDone)}
                                         className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
                                             item.isDone
-                                                ? 'bg-green-500 border-green-400 text-white'
-                                                : 'border-white/25 hover:border-orange-500/60 bg-white/5'
+                                                ? 'bg-[#111111] border-[#111111] text-white'
+                                                : 'border-black/20 hover:border-black/40 bg-white'
                                         } ${!canEdit ? 'opacity-50 cursor-default' : ''}`}
                                     >
                                         {item.isDone && <Check size={12} strokeWidth={3} />}
@@ -499,8 +499,8 @@ function ViewChecklistPanel({
                                     <span
                                         className={`flex-1 text-sm leading-snug ${
                                             item.isDone
-                                                ? 'text-gray-500 line-through'
-                                                : 'text-gray-200'
+                                                ? 'text-[#8b8b8f] line-through'
+                                                : 'text-[#111111]'
                                         }`}
                                     >
                                         {item.title}
@@ -546,8 +546,8 @@ function EditChecklistPanel({
 
     return (
         <>
-            <header className="px-4 py-3 border-b border-orange-500/20 bg-orange-500/10">
-                <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">
+            <header className="px-4 py-3 border-b border-black/10 bg-[#f5f2ec]">
+                <span className="text-[10px] font-medium text-[#6b6b6f] uppercase tracking-wider">
                     Editando lista
                 </span>
                 <input
@@ -555,22 +555,22 @@ function EditChecklistPanel({
                     value={editDraft.listTitle}
                     onChange={(e) => onDraftChange({ ...editDraft, listTitle: e.target.value })}
                     maxLength={100}
-                    className="mt-2 w-full bg-black/20 border border-orange-500/30 rounded-lg px-3 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                    className="mt-2 w-full bg-white border border-black/10 rounded-lg px-3 py-2 text-sm font-medium text-[#111111] focus:outline-none focus:border-black/20"
                     placeholder="Nombre de la lista"
                 />
             </header>
 
             <div className="px-4 py-3 space-y-2 max-h-52 overflow-y-auto custom-scrollbar">
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                <p className="text-[10px] font-medium text-[#6b6b6f] uppercase tracking-wider mb-1">
                     Subtareas ({visibleItems.length})
                 </p>
                 {visibleItems.length === 0 && (
-                    <p className="text-xs text-gray-600 py-2">Añade subtareas abajo.</p>
+                    <p className="text-xs text-[#6b6b6f] py-2">Añade subtareas abajo.</p>
                 )}
                 {visibleItems.map((item) => (
                     <div key={item.id} className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-md border border-white/10 bg-white/5 shrink-0 flex items-center justify-center">
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-600" />
+                        <span className="w-5 h-5 rounded-md border border-black/10 bg-[#f5f2ec] shrink-0 flex items-center justify-center">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#8b8b8f]" />
                         </span>
                         <input
                             type="text"
@@ -582,12 +582,12 @@ function EditChecklistPanel({
                                 })
                             }
                             maxLength={500}
-                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500/40"
+                            className="flex-1 bg-white border border-black/10 rounded-lg px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-black/20"
                         />
                         <button
                             type="button"
                             onClick={() => onRemoveItem(item.id)}
-                            className="p-2 text-gray-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-all shrink-0"
+                            className="p-2 text-[#6b6b6f] hover:text-[#111111] rounded-lg hover:bg-[#f5f2ec] transition-all shrink-0"
                             title="Quitar"
                         >
                             <Trash2 size={14} />
@@ -595,23 +595,23 @@ function EditChecklistPanel({
                     </div>
                 ))}
                 <div className="flex items-center gap-2 pt-1">
-                    <Plus size={14} className="text-orange-500/70 shrink-0" />
+                    <Plus size={14} className="text-[#111111] shrink-0" />
                     <input
                         type="text"
                         value={editDraft.newItem}
                         onChange={(e) => onDraftChange({ ...editDraft, newItem: e.target.value })}
                         placeholder="Nueva subtarea..."
-                        className="flex-1 bg-white/5 border border-dashed border-white/15 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/40"
+                        className="flex-1 bg-[#f5f2ec] border border-dashed border-black/15 rounded-lg px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-black/30"
                     />
                 </div>
             </div>
 
-            <footer className="px-4 py-3 flex flex-wrap gap-2 border-t border-orange-500/20 bg-black/10">
+            <footer className="px-4 py-3 flex flex-wrap gap-2 border-t border-black/10 bg-[#f5f2ec]">
                 <button
                     type="button"
                     onClick={onSave}
                     disabled={isSaving}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#111111] text-white disabled:opacity-50 rounded-xl text-xs font-medium transition-colors"
                 >
                     {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                     Guardar
@@ -620,7 +620,7 @@ function EditChecklistPanel({
                     type="button"
                     onClick={onCancel}
                     disabled={isSaving}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-400 rounded-xl text-xs font-bold transition-all"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-[#f5f2ec] text-[#6b6b6f] rounded-xl text-xs font-medium transition-all"
                 >
                     <X size={14} /> Cancelar
                 </button>
@@ -657,13 +657,13 @@ function QuickAddRow({
                     }
                 }}
                 placeholder="+ Añadir subtarea..."
-                className="flex-1 bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-500/30"
+                className="flex-1 bg-white border border-black/10 rounded-lg px-3 py-2 text-sm text-[#111111] placeholder:text-[#8b8b8f] focus:outline-none focus:border-black/20"
             />
             <button
                 type="button"
                 disabled={isLoading || !text.trim()}
                 onClick={submit}
-                className="px-3 py-2 rounded-lg bg-white/10 hover:bg-orange-600/30 hover:text-orange-200 disabled:opacity-40 text-gray-300 transition-all"
+                className="px-3 py-2 rounded-lg bg-[#111111] hover:bg-black text-white disabled:opacity-40 transition-colors"
             >
                 {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
             </button>

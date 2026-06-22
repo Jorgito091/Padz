@@ -71,44 +71,41 @@ export const MembersModal: React.FC<MembersModalProps> = ({ board, user, onClose
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/30 backdrop-blur-sm"
             />
             <motion.div
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
-                className="relative w-full max-w-md bg-[#141416]/95 border border-white/10 rounded-2xl shadow-2xl p-6 overflow-hidden"
+                className="relative w-full max-w-md bg-white border border-black/10 rounded-2xl p-6 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.08)]"
             >
-                {/* Background glow */}
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-600 via-orange-400 to-orange-600" />
-                
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h2 className="text-xl font-bold text-white">Miembros del Tablero</h2>
-                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">Gestionar accesos y roles</p>
+                        <h2 className="text-xl font-semibold text-[#111111]">Miembros del Tablero</h2>
+                        <p className="text-[10px] text-[#6b6b6f] font-medium uppercase tracking-widest mt-0.5">Gestionar accesos y roles</p>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl text-gray-400 hover:text-white transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-[#f5f2ec] rounded-xl text-[#6b6b6f] hover:text-[#111111] transition-colors">
                         <X size={20} />
                     </button>
                 </div>
 
                 {isOwner && (
-                    <form onSubmit={handleInviteMember} className="mb-8 relative z-10 bg-white/5 p-4 rounded-xl border border-white/5">
-                        <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Invitar nuevo colaborador</label>
+                    <form onSubmit={handleInviteMember} className="mb-8 relative z-10 bg-[#f5f2ec] p-4 rounded-xl border border-black/10">
+                        <label className="block text-[10px] font-medium text-[#6b6b6f] uppercase tracking-widest mb-3">Invitar nuevo colaborador</label>
                         <div className="space-y-3">
                             <input
                                 type="email"
                                 placeholder="correo@ejemplo.com"
                                 value={inviteEmail}
                                 onChange={(e) => setInviteEmail(e.target.value)}
-                                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm outline-none focus:border-orange-500/50 transition-all text-white"
+                                className="w-full bg-white border border-black/10 rounded-lg px-4 py-2 text-sm outline-none focus:border-black/20 transition-colors text-[#111111]"
                                 required
                             />
                             <div className="flex gap-2">
                                 <select
                                     value={inviteRole}
                                     onChange={(e) => setInviteRole(e.target.value)}
-                                    className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs font-bold outline-none focus:border-orange-500/50 transition-all text-white appearance-none cursor-pointer"
+                                    className="flex-1 bg-white border border-black/10 rounded-lg px-3 py-2 text-xs font-medium outline-none focus:border-black/20 transition-colors text-[#111111] appearance-none cursor-pointer"
                                 >
                                     <option value="MEMBER">COLABORADOR (Edición)</option>
                                     <option value="VIEWER">INVITADO (Solo lectura)</option>
@@ -116,7 +113,7 @@ export const MembersModal: React.FC<MembersModalProps> = ({ board, user, onClose
                                 <button
                                     type="submit"
                                     disabled={isInviting}
-                                    className="bg-orange-600 hover:bg-orange-500 disabled:opacity-50 px-6 py-2 rounded-lg font-bold transition-all flex items-center gap-2 text-xs shadow-lg shadow-orange-900/20"
+                                    className="bg-[#111111] text-white disabled:opacity-50 px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-xs"
                                 >
                                     {isInviting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                                     Invitar
@@ -127,46 +124,46 @@ export const MembersModal: React.FC<MembersModalProps> = ({ board, user, onClose
                 )}
 
                 <div className="space-y-4">
-                    <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Colaboradores actuales</h3>
+                    <h3 className="text-[10px] font-medium text-[#6b6b6f] uppercase tracking-widest">Colaboradores actuales</h3>
 
                     <div className="space-y-2 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
                         {/* Owner */}
-                        <div className="flex items-center justify-between p-3 bg-white/[0.02] rounded-xl border border-white/5">
+                        <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-black/10">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-orange-600 flex items-center justify-center font-bold text-sm overflow-hidden shadow-lg border-2 border-orange-500/20">
+                                <div className="w-10 h-10 rounded-full bg-[#f5f2ec] flex items-center justify-center font-bold text-sm overflow-hidden border border-black/10 text-[#111111]">
                                     {board.owner?.avatar ? <img src={board.owner.avatar} className="w-full h-full object-cover" /> : board.owner?.name.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
-                                    <div className="font-bold text-white text-sm leading-tight">{board.owner?.name}</div>
-                                    <div className="text-[9px] text-orange-500 font-black uppercase tracking-tighter bg-orange-500/10 px-1.5 py-0.5 rounded inline-block mt-1">Dueño del tablero</div>
+                                    <div className="font-semibold text-[#111111] text-sm leading-tight">{board.owner?.name}</div>
+                                    <div className="text-[9px] text-[#111111] font-medium uppercase tracking-tighter bg-[#f5f2ec] px-1.5 py-0.5 rounded inline-block mt-1 border border-black/10">Dueño del tablero</div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Members */}
                         {board.members?.map(m => (
-                            <div key={m.id} className="flex items-center justify-between p-3 bg-white/[0.03] rounded-xl border border-white/5 group hover:border-white/10 transition-colors">
+                            <div key={m.id} className="flex items-center justify-between p-3 bg-white rounded-xl border border-black/10 group hover:border-black/20 transition-colors">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-sm overflow-hidden shadow-inner border border-white/5">
+                                    <div className="w-10 h-10 rounded-full bg-[#f5f2ec] flex items-center justify-center font-bold text-sm overflow-hidden border border-black/10 text-[#111111]">
                                         {m.user.avatar ? <img src={m.user.avatar} className="w-full h-full object-cover" /> : m.user.name.charAt(0).toUpperCase()}
                                     </div>
                                     <div>
-                                        <div className="font-bold text-white text-sm leading-tight">{m.user.name}</div>
+                                        <div className="font-semibold text-[#111111] text-sm leading-tight">{m.user.name}</div>
                                         {isOwner ? (
                                             <div className="relative mt-1">
                                                 <select
                                                     value={m.role}
                                                     disabled={updatingUserId === m.userId}
                                                     onChange={(e) => handleUpdateRole(m.userId, e.target.value)}
-                                                    className="bg-transparent text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-orange-400 transition-colors outline-none cursor-pointer appearance-none pr-4"
+                                                    className="bg-transparent text-[10px] font-medium text-[#6b6b6f] uppercase tracking-widest hover:text-[#111111] transition-colors outline-none cursor-pointer appearance-none pr-4"
                                                 >
                                                     <option value="MEMBER">Colaborador</option>
                                                     <option value="VIEWER">Invitado</option>
                                                 </select>
-                                                {updatingUserId === m.userId && <Loader2 size={10} className="animate-spin absolute -right-2 top-0.5 text-orange-500" />}
+                                                {updatingUserId === m.userId && <Loader2 size={10} className="animate-spin absolute -right-2 top-0.5 text-[#111111]" />}
                                             </div>
                                         ) : (
-                                            <div className={`text-[9px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded inline-block mt-1 ${m.role === 'MEMBER' ? 'text-blue-400 bg-blue-400/10' : 'text-zinc-500 bg-zinc-500/10'}`}>
+                                            <div className={`text-[9px] font-medium uppercase tracking-tighter px-1.5 py-0.5 rounded inline-block mt-1 ${m.role === 'MEMBER' ? 'text-[#111111] bg-[#f5f2ec] border border-black/10' : 'text-[#6b6b6f] bg-[#f5f2ec] border border-black/10'}`}>
                                                 {m.role === 'MEMBER' ? 'Colaborador' : 'Invitado'}
                                             </div>
                                         )}
@@ -175,7 +172,7 @@ export const MembersModal: React.FC<MembersModalProps> = ({ board, user, onClose
                                 {(isOwner || m.userId === user?.id) && (
                                     <button
                                         onClick={() => handleRemoveMember(m.userId)}
-                                        className="p-2 hover:bg-red-500/10 rounded-lg text-gray-600 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
+                                        className="p-2 hover:bg-[#f5f2ec] rounded-lg text-[#6b6b6f] hover:text-[#111111] transition-all opacity-0 group-hover:opacity-100"
                                         title={m.userId === user?.id ? "Salir del tablero" : "Eliminar miembro"}
                                     >
                                         <Trash2 size={16} />
@@ -184,8 +181,8 @@ export const MembersModal: React.FC<MembersModalProps> = ({ board, user, onClose
                             </div>
                         ))}
                         {(!board.members || board.members.length === 0) && (
-                            <div className="text-center py-8 bg-white/[0.01] rounded-xl border border-dashed border-white/5">
-                                <p className="text-xs text-gray-600 italic">No hay otros colaboradores en este tablero</p>
+                            <div className="text-center py-8 bg-white rounded-xl border border-dashed border-black/10">
+                                <p className="text-xs text-[#8b8b8f] italic">No hay otros colaboradores en este tablero</p>
                             </div>
                         )}
                     </div>

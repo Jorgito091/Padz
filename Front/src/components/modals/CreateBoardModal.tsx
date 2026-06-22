@@ -9,19 +9,19 @@ interface CreateBoardModalProps {
 }
 
 const colorOptions = [
-    'from-orange-600 to-orange-500',
-    'from-blue-600 to-blue-500',
-    'from-emerald-600 to-emerald-500',
-    'from-purple-600 to-purple-500',
-    'from-pink-600 to-pink-500',
-    'from-zinc-800 to-zinc-900',
+    'bg-zinc-900',
+    'bg-zinc-800',
+    'bg-neutral-800',
+    'bg-stone-800',
+    'bg-slate-800',
+    'bg-white',
 ];
 
 export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ editingBoard, onClose, onSave }) => {
     const [boardForm, setBoardForm] = useState({
         title: '',
         description: '',
-        bgColor: 'from-orange-600 to-orange-500'
+        bgColor: 'bg-white'
     });
 
     useEffect(() => {
@@ -29,7 +29,7 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ editingBoard
             setBoardForm({
                 title: editingBoard.title,
                 description: editingBoard.description || '',
-                bgColor: editingBoard.bgColor || 'from-orange-600 to-orange-500'
+                    bgColor: editingBoard.bgColor || 'bg-white'
             });
         }
     }, [editingBoard]);
@@ -40,48 +40,46 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ editingBoard
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="w-full max-w-md bg-[#1a1a1c] border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden"
+                className="w-full max-w-md bg-white border border-black/10 rounded-2xl p-6 relative overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.08)]"
             >
-                <div className={`absolute inset-0 bg-gradient-to-br ${boardForm.bgColor} opacity-5`} />
-
-                <h2 className="text-xl font-bold mb-4 relative z-10">
+                <h2 className="text-xl font-semibold mb-4 relative z-10 text-[#111111]">
                     {editingBoard ? 'Editar Tablero' : 'Nuevo Tablero'}
                 </h2>
                 <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1">Título</label>
+                        <label className="block text-sm font-medium text-[#6b6b6f] mb-1">Título</label>
                         <input
                             type="text"
                             value={boardForm.title}
                             onChange={(e) => setBoardForm({ ...boardForm, title: e.target.value })}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50 transition-all"
+                            className="w-full bg-[#f5f2ec] border border-black/10 rounded-xl p-3 text-[#111111] focus:outline-none focus:border-black/20 transition-colors"
                             placeholder="Ej: Proyecto Website"
                             autoFocus
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1">Descripción (Opcional)</label>
+                        <label className="block text-sm font-medium text-[#6b6b6f] mb-1">Descripción (Opcional)</label>
                         <textarea
                             value={boardForm.description}
                             onChange={(e) => setBoardForm({ ...boardForm, description: e.target.value })}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-1 focus:ring-orange-500/50 h-24 resize-none transition-all"
+                            className="w-full bg-[#f5f2ec] border border-black/10 rounded-xl p-3 text-[#111111] focus:outline-none focus:border-black/20 h-24 resize-none transition-colors"
                             placeholder="¿De qué trata este tablero?"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Color de Fondo</label>
+                        <label className="block text-sm font-medium text-[#6b6b6f] mb-2">Color de Fondo</label>
                         <div className="grid grid-cols-6 gap-2">
                             {colorOptions.map((color) => (
                                 <button
                                     key={color}
                                     type="button"
                                     onClick={() => setBoardForm({ ...boardForm, bgColor: color })}
-                                    className={`w-10 h-10 rounded-full bg-gradient-to-br ${color} transition-all ${boardForm.bgColor === color ? 'ring-2 ring-white scale-110' : 'hover:scale-105 opacity-80 hover:opacity-100'}`}
+                                    className={`w-10 h-10 rounded-full ${color} border transition-colors ${boardForm.bgColor === color ? 'border-black scale-105' : 'border-black/10 hover:border-black/30'}`}
                                 />
                             ))}
                         </div>
@@ -90,13 +88,13 @@ export const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ editingBoard
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 hover:bg-white/5 rounded-lg text-gray-400 transition-colors"
+                            className="px-4 py-2 hover:bg-[#f5f2ec] rounded-lg text-[#6b6b6f] transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
-                            className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-bold transition-colors shadow-lg shadow-orange-900/20"
+                            className="px-4 py-2 bg-[#111111] text-white rounded-lg font-medium transition-colors"
                         >
                             {editingBoard ? 'Guardar Cambios' : 'Crear Tablero'}
                         </button>

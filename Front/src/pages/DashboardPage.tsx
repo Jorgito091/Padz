@@ -109,20 +109,17 @@ const DashboardPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0c] text-white">
-            {/* Background blobs */}
-            <div className={`fixed top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] pointer-events-none transition-colors duration-700 ${view === 'board' && selectedBoard?.bgColor ? `bg-gradient-to-br ${selectedBoard.bgColor} opacity-20` : 'bg-orange-600/5'}`} />
-            <div className={`fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] pointer-events-none transition-colors duration-700 ${view === 'board' && selectedBoard?.bgColor ? `bg-gradient-to-tl ${selectedBoard.bgColor} opacity-20` : 'bg-orange-600/5'}`} />
+        <div className="min-h-screen bg-[#f5f2ec] text-[#111111]">
 
             {/* Navbar */}
-            <nav className="sticky top-0 z-50 backdrop-blur-xl bg-white/5 border-b border-white/10 flex justify-between items-center px-8 py-4 mb-8">
+            <nav className="sticky top-0 z-50 bg-[#f5f2ec]/95 backdrop-blur-sm border-b border-black/10 flex justify-between items-center px-8 py-4 mb-8">
                 <div className="flex items-center gap-8">
                     <div
                         className="flex items-center gap-3 cursor-pointer group"
                         onClick={() => setView('dashboard')}
                     >
                         <Logo size={32} />
-                        <span className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent group-hover:from-orange-400 group-hover:to-orange-300 transition-all">
+                        <span className="text-2xl font-semibold text-[#111111] group-hover:text-black transition-colors">
                             Padz
                         </span>
                     </div>
@@ -130,7 +127,7 @@ const DashboardPage: React.FC = () => {
                         <div className="hidden md:flex gap-4">
                             <button
                                 onClick={openCreateBoardModal}
-                                className="px-4 py-2 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-500 shadow-lg shadow-orange-950/20 transition-all flex items-center gap-2"
+                                className="px-4 py-2 bg-[#111111] text-white rounded-lg font-medium hover:bg-black transition-colors flex items-center gap-2"
                             >
                                 <Plus size={18} /> Crear Tablero
                             </button>
@@ -141,14 +138,14 @@ const DashboardPage: React.FC = () => {
                 <div className="flex items-center gap-4">
                     <NotificationPanel />
                     <div className="flex flex-col items-end hidden sm:flex">
-                        <span className="text-sm font-semibold text-white">{user?.name}</span>
+                        <span className="text-sm font-semibold text-[#111111]">{user?.name}</span>
                     </div>
                     <button
                         onClick={() => setIsProfileModalOpen(true)}
                         className="group relative"
                         title="Configuración de usuario"
                     >
-                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/10 group-hover:border-orange-500/50 transition-all shadow-lg">
+                        <div className="w-10 h-10 rounded-full overflow-hidden border border-black/10 group-hover:border-black/30 transition-colors bg-white">
                             {user?.avatar ? (
                                 <img
                                     src={user.avatar}
@@ -156,7 +153,7 @@ const DashboardPage: React.FC = () => {
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
-                                <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-orange-400">
+                                <div className="w-full h-full bg-white flex items-center justify-center text-[#6b6b6f] group-hover:text-[#111111]">
                                     <UserCog size={20} />
                                 </div>
                             )}

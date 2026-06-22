@@ -43,7 +43,7 @@ export const SortableCard: React.FC<CardProps> = ({ id, title, description, onCl
             <motion.div
                 layoutId={id}
                 onClick={onClick}
-                className={`bg-white/5 p-4 rounded-xl border border-white/5 hover:border-orange-500/40 cursor-pointer active:cursor-grabbing transition-all shadow-sm hover:shadow-lg hover:shadow-orange-500/5 text-gray-300 group relative ${isDragging ? 'ring-2 ring-orange-500' : ''}`}
+                className={`bg-white p-4 rounded-xl border border-black/10 hover:border-black/20 cursor-pointer active:cursor-grabbing transition-colors text-[#111111] group relative ${isDragging ? 'ring-1 ring-black/20' : ''}`}
             >
                 <div className="flex justify-between items-start gap-2">
                     <div className="flex-1">
@@ -53,15 +53,15 @@ export const SortableCard: React.FC<CardProps> = ({ id, title, description, onCl
                                     <div
                                         key={i}
                                         title={l.label.name}
-                                        className="h-1.5 w-8 rounded-full shadow-sm"
+                                        className="h-1.5 w-8 rounded-full"
                                         style={{ backgroundColor: l.label.color }}
                                     />
                                 ))}
                             </div>
                         )}
-                        <div className="font-medium text-white">{title}</div>
+                        <div className="font-medium text-[#111111]">{title}</div>
                         {description && (
-                            <div className="text-xs text-gray-500 mt-2 line-clamp-2">{description}</div>
+                            <div className="text-xs text-[#6b6b6f] mt-2 line-clamp-2">{description}</div>
                         )}
 
                         <div className="flex items-center justify-between mt-3">
@@ -69,21 +69,21 @@ export const SortableCard: React.FC<CardProps> = ({ id, title, description, onCl
                                 {checklistProgress && (
                                     <div className={`flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded border ${
                                         checklistProgress.done === checklistProgress.total
-                                            ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                                            : 'bg-white/5 text-gray-400 border-white/10'
+                                            ? 'bg-[#f5f2ec] text-[#111111] border-black/10'
+                                            : 'bg-[#f5f2ec] text-[#6b6b6f] border-black/10'
                                     }`}>
                                         <ListChecks size={10} />
                                         <span>{checklistProgress.done}/{checklistProgress.total}</span>
                                     </div>
                                 )}
                                 {dueDate && (
-                                    <div className={`flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm transition-all ${isDone
-                                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                    <div className={`flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded border transition-colors ${isDone
+                                        ? 'bg-[#f5f2ec] text-[#111111] border-black/10'
                                         : new Date(dueDate) < new Date()
-                                            ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                            ? 'bg-[#f5f2ec] text-[#6b6b6f] border-black/10'
                                             : new Date(dueDate).getTime() - new Date().getTime() < 86400000
-                                                ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                                                : 'bg-white/5 text-gray-400 border border-white/10'
+                                                ? 'bg-[#f5f2ec] text-[#6b6b6f] border-black/10'
+                                                : 'bg-[#f5f2ec] text-[#6b6b6f] border-black/10'
                                         }`}>
                                         {isDone ? <CheckCircle2 size={10} /> : <Clock size={10} />}
                                         <span>{new Date(dueDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
@@ -96,7 +96,7 @@ export const SortableCard: React.FC<CardProps> = ({ id, title, description, onCl
                                     <div 
                                         key={i} 
                                         title={a.user.name}
-                                        className="w-5 h-5 rounded-full border border-[#1a1a1c] bg-white/10 overflow-hidden shadow-sm"
+                                        className="w-5 h-5 rounded-full border border-black/10 bg-[#f5f2ec] overflow-hidden"
                                     >
                                         {a.user.avatar ? (
                                             <img src={a.user.avatar} className="w-full h-full object-cover" alt="" />
@@ -116,7 +116,7 @@ export const SortableCard: React.FC<CardProps> = ({ id, title, description, onCl
                             {onEdit && (
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                                    className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-blue-400 transition-colors"
+                                    className="p-1 hover:bg-[#f5f2ec] rounded text-[#6b6b6f] hover:text-[#111111] transition-colors"
                                 >
                                     <Pencil size={14} />
                                 </button>
@@ -124,7 +124,7 @@ export const SortableCard: React.FC<CardProps> = ({ id, title, description, onCl
                             {onDelete && (
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                                    className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-red-400 transition-colors"
+                                    className="p-1 hover:bg-[#f5f2ec] rounded text-[#6b6b6f] hover:text-[#111111] transition-colors"
                                 >
                                     <Trash2 size={14} />
                                 </button>

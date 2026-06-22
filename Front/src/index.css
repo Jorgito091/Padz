@@ -3,42 +3,30 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #121212;
-  --bg-secondary: #1e1e1e;
+  --bg-primary: #f5f2ec;
+  --bg-secondary: #ffffff;
   --text-primary: #ffffff;
-  --text-secondary: #a1a1aa;
-  --accent: #f97316;
-  --accent-hover: #ea580c;
-  --card-bg: rgba(255, 255, 255, 0.03);
+  --text-secondary: #6b6b6f;
+  --accent: #111111;
+  --accent-hover: #000000;
+  --card-bg: #ffffff;
 }
 
 body {
-  @apply bg-[#121212] text-white font-sans antialiased;
+  @apply bg-[#f5f2ec] text-[#111111] font-sans antialiased;
   min-height: 100vh;
 }
 
 .glass {
-  @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  @apply bg-white border border-black/10;
 }
 
 .glass-hover {
-  @apply hover:bg-white/10 hover:border-[#38bdf8] transition-all duration-200 transform hover:-translate-y-1;
+  @apply hover:bg-white hover:border-black/20 transition-all duration-200;
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
-}
-
-@keyframes loading {
-  0% {
-    background-position: 200% 0;
-  }
-
-  100% {
-    background-position: -200% 0;
-  }
+  @apply bg-black/5 animate-pulse;
 }
 
 /* Custom scrollbar */
@@ -52,7 +40,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-white/10 rounded-full hover:bg-white/20;
+  @apply bg-black/10 rounded-full hover:bg-black/20;
 }
 
 /* Ensure native pickers (date, color) look good in dark mode */

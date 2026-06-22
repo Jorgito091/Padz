@@ -51,8 +51,8 @@ export const BoardGrid: React.FC<BoardGridProps> = ({
             <div className="mb-12">
                 <div className="flex items-center gap-2 mb-6 ml-2">
                     {icon}
-                    <h2 className="text-xl font-bold text-white/90 tracking-tight">{title}</h2>
-                    <span className="bg-white/5 px-2 py-0.5 rounded-full text-xs text-gray-400 font-mono">{boardsList.length}</span>
+                    <h2 className="text-xl font-semibold text-[#111111] tracking-tight">{title}</h2>
+                    <span className="bg-white px-2 py-0.5 rounded-full text-xs text-[#6b6b6f] font-mono border border-black/10">{boardsList.length}</span>
                 </div>
                 <SortableContext items={boardsList.map(b => b.id)} strategy={rectSortingStrategy}>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -77,18 +77,18 @@ export const BoardGrid: React.FC<BoardGridProps> = ({
         <div className="max-w-7xl mx-auto px-8 pb-20">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
                 <div>
-                    <h1 className="text-4xl font-black text-white mb-2 tracking-tight">Tus Tableros</h1>
-                    <p className="text-gray-400 font-medium">Gestiona tus proyectos y equipos en un solo lugar.</p>
+                    <h1 className="text-4xl font-semibold text-[#111111] mb-2 tracking-tight">Tus Tableros</h1>
+                    <p className="text-[#6b6b6f] font-medium">Gestiona tus proyectos y equipos en un solo lugar.</p>
                 </div>
                 <div className="flex items-center gap-4 w-full md:w-auto">
                     <div className="relative flex-1 md:w-80 group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-orange-500 transition-colors" size={18} />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8b8b8f] group-focus-within:text-[#111111] transition-colors" size={18} />
                         <input
                             type="text"
                             placeholder="Buscar tableros..."
                             value={searchTerm}
                             onChange={(e) => onSearchChange(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/50 transition-all placeholder:text-gray-600"
+                            className="w-full bg-white border border-black/10 rounded-2xl py-3 pl-12 pr-4 text-[#111111] focus:outline-none focus:border-black/20 transition-colors placeholder:text-[#8b8b8f]"
                         />
                     </div>
                 </div>
@@ -99,15 +99,15 @@ export const BoardGrid: React.FC<BoardGridProps> = ({
                 {renderBoardSection("Todos los Tableros", otherBoards)}
 
                 {filteredBoards.length === 0 && (
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-20 bg-white/[0.02] rounded-3xl border-2 border-dashed border-white/5">
-                        <p className="text-gray-500 text-lg font-medium">No se encontraron tableros</p>
-                        <button onClick={onCreateBoard} className="mt-4 text-orange-500 font-bold hover:text-orange-400 transition-colors underline underline-offset-4">Crear uno nuevo</button>
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-20 bg-white rounded-3xl border border-dashed border-black/10">
+                        <p className="text-[#6b6b6f] text-lg font-medium">No se encontraron tableros</p>
+                        <button onClick={onCreateBoard} className="mt-4 text-[#111111] font-medium hover:underline transition-colors underline-offset-4">Crear uno nuevo</button>
                     </motion.div>
                 )}
 
                 <DragOverlay>
                     {activeId ? (
-                        <div className="w-80 h-48 bg-white/10 rounded-3xl border-2 border-orange-500/50 shadow-2xl backdrop-blur-xl rotate-3" />
+                        <div className="w-80 h-48 bg-white rounded-3xl border border-black/10 rotate-1" />
                     ) : null}
                 </DragOverlay>
             </DndContext>

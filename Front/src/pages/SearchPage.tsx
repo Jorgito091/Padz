@@ -87,28 +87,30 @@ const SearchPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-white px-6 py-8">
-      <h1 className="text-2xl font-bold mb-4">Búsqueda avanzada de tarjetas</h1>
+    <div className="min-h-screen bg-[#f5f2ec] text-[#111111] px-6 py-8">
+      <div className="mx-auto max-w-6xl">
+      <h1 className="text-3xl font-semibold mb-2">Búsqueda avanzada</h1>
+      <p className="text-[#6b6b6f] mb-6">Filtra tarjetas con una interfaz limpia y directa.</p>
 
-      <form onSubmit={handleSearch} className="flex flex-col gap-3 max-w-3xl">
-        <input value={q} onChange={e => setQ(e.target.value)} placeholder="Texto libre (título/descripcion)" className="p-2 rounded bg-white/5" />
+      <form onSubmit={handleSearch} className="flex flex-col gap-3 max-w-4xl">
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder="Texto libre (título/descripcion)" className="p-3 rounded-xl bg-white border border-black/10 text-[#111111] placeholder:text-[#8b8b8f]" />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <select value={boardId} onChange={e => setBoardId(e.target.value)} className="p-2 rounded bg-white/5">
+          <select value={boardId} onChange={e => setBoardId(e.target.value)} className="p-3 rounded-xl bg-white border border-black/10 text-[#111111]">
             <option value="">Seleccionar board (opcional)</option>
             {boards.map(b => (
               <option key={b.id} value={b.id}>{b.title}</option>
             ))}
           </select>
 
-          <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className="p-2 rounded bg-white/5">
+          <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className="p-3 rounded-xl bg-white border border-black/10 text-[#111111]">
             <option value="">Asignado a (opcional)</option>
             {members.map(m => (
               <option key={m.userId} value={m.userId}>{m.user.name}</option>
             ))}
           </select>
 
-          <select value={isDone} onChange={e => setIsDone(e.target.value)} className="p-2 rounded bg-white/5">
+          <select value={isDone} onChange={e => setIsDone(e.target.value)} className="p-3 rounded-xl bg-white border border-black/10 text-[#111111]">
             <option value="">Cualquiera</option>
             <option value="true">Hecho</option>
             <option value="false">Pendiente</option>
@@ -116,12 +118,12 @@ const SearchPage: React.FC = () => {
         </div>
 
         <div>
-          <div className="text-sm text-gray-300 mb-2">Etiquetas (haz clic para seleccionar):</div>
+          <div className="text-sm text-[#6b6b6f] mb-2">Etiquetas (haz clic para seleccionar):</div>
           <div className="flex flex-wrap gap-2">
             {labels.map((l: any) => {
               const selected = selectedLabelIds.includes(l.id);
               return (
-                <button key={l.id} type="button" onClick={() => toggleLabel(l.id)} className={`px-3 py-1 rounded-full text-xs font-semibold ${selected ? 'ring-2 ring-orange-400' : ''}`} style={{ background: l.color, color: '#000' }}>
+                <button key={l.id} type="button" onClick={() => toggleLabel(l.id)} className={`px-3 py-1 rounded-full text-xs font-medium border ${selected ? 'border-black text-black bg-white' : 'border-black/10 text-[#6b6b6f] bg-white'}`} style={{ background: '#ffffff' }}>
                   {l.name}
                 </button>
               );
@@ -130,8 +132,8 @@ const SearchPage: React.FC = () => {
         </div>
 
         <div className="flex gap-2">
-          <button className="px-4 py-2 bg-orange-600 rounded">Buscar</button>
-          <button type="button" className="px-4 py-2 bg-white/5 rounded" onClick={() => { setQ(''); setSelectedLabelIds([]); setAssignedTo(''); setBoardId(''); setIsDone(''); setPage(1); setResults([]); setMeta(null); }}>Limpiar</button>
+          <button className="px-4 py-2 bg-[#111111] text-white rounded-xl font-medium">Buscar</button>
+          <button type="button" className="px-4 py-2 bg-white border border-black/10 rounded-xl text-[#111111]" onClick={() => { setQ(''); setSelectedLabelIds([]); setAssignedTo(''); setBoardId(''); setIsDone(''); setPage(1); setResults([]); setMeta(null); }}>Limpiar</button>
         </div>
       </form>
 
@@ -140,23 +142,23 @@ const SearchPage: React.FC = () => {
           <div>Cargando...</div>
         ) : (
           <>
-            <div className="text-sm text-gray-400 mb-3">{meta ? `Resultados: ${meta.total} — Página ${meta.page}` : ''}</div>
+            <div className="text-sm text-[#6b6b6f] mb-3">{meta ? `Resultados: ${meta.total} — Página ${meta.page}` : ''}</div>
             <div className="grid gap-3">
               {results.map((card) => (
-                <div key={card.id} className="p-3 bg-white/5 rounded-md">
+                <div key={card.id} className="p-4 bg-white rounded-2xl border border-black/10">
                   <div className="flex justify-between items-start">
                     <div>
-                      <div className="font-semibold text-lg">{card.title}</div>
-                      <div className="text-sm text-gray-300">{card.description}</div>
-                      <div className="text-xs text-gray-400 mt-2">Lista: {card.list?.title} — BoardId: {card.list?.boardId}</div>
+                      <div className="font-semibold text-lg text-[#111111]">{card.title}</div>
+                      <div className="text-sm text-[#6b6b6f]">{card.description}</div>
+                      <div className="text-xs text-[#8b8b8f] mt-2">Lista: {card.list?.title} — BoardId: {card.list?.boardId}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs text-gray-400">Actualizado: {new Date(card.updatedAt).toLocaleString()}</div>
+                      <div className="text-xs text-[#8b8b8f]">Actualizado: {new Date(card.updatedAt).toLocaleString()}</div>
                     </div>
                   </div>
                   <div className="flex gap-2 mt-3 flex-wrap">
                     {card.labels?.map((l: any) => (
-                      <span key={l.label.id} className="px-2 py-1 text-xs rounded" style={{ background: l.label.color, color: '#000' }}>{l.label.name}</span>
+                      <span key={l.label.id} className="px-2 py-1 text-xs rounded-full border border-black/10 bg-[#f5f2ec] text-[#111111]">{l.label.name}</span>
                     ))}
                   </div>
                 </div>
@@ -165,13 +167,14 @@ const SearchPage: React.FC = () => {
 
             {meta && meta.total > meta.limit && (
               <div className="flex items-center justify-center gap-3 mt-6">
-                <button className="px-3 py-1 bg-white/5 rounded" onClick={() => setPage(p => Math.max(1, p - 1))}>Anterior</button>
-                <div className="text-sm text-gray-300">{meta.page} / {Math.ceil(meta.total / meta.limit)}</div>
-                <button className="px-3 py-1 bg-white/5 rounded" onClick={() => setPage(p => p + 1)}>Siguiente</button>
+                <button className="px-3 py-1 bg-white border border-black/10 rounded-lg text-[#111111]" onClick={() => setPage(p => Math.max(1, p - 1))}>Anterior</button>
+                <div className="text-sm text-[#6b6b6f]">{meta.page} / {Math.ceil(meta.total / meta.limit)}</div>
+                <button className="px-3 py-1 bg-white border border-black/10 rounded-lg text-[#111111]" onClick={() => setPage(p => p + 1)}>Siguiente</button>
               </div>
             )}
           </>
         )}
+      </div>
       </div>
     </div>
   );

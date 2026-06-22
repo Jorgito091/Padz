@@ -30,27 +30,44 @@ const LoginPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#0a0a0c] relative overflow-hidden px-4">
-            {/* Background blobs */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-600/10 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-600/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
-
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-md relative z-10"
-            >
-                <div className="backdrop-blur-xl bg-white/5 border border-white/10 p-8 rounded-3xl shadow-2xl">
-                    <div className="text-center mb-8">
-                        <div className="flex justify-center mb-6">
-                            <Logo size={80} />
+        <div className="min-h-screen bg-[#f5f2ec] text-[#111111] px-4 py-6 md:py-10">
+            <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-6xl overflow-hidden rounded-[32px] border border-black/10 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.06)] md:grid-cols-[1.1fr_0.9fr]">
+                <div className="flex flex-col justify-between border-b border-black/10 bg-[#111111] p-8 text-white md:border-b-0 md:border-r md:p-12">
+                    <div className="flex items-center gap-4">
+                        <Logo size={72} />
+                        <div>
+                            <p className="text-[10px] uppercase tracking-[0.4em] text-white/45">Padz</p>
+                            <h1 className="mt-2 text-4xl font-semibold leading-tight">Orden simple para equipos reales.</h1>
                         </div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Bienvenido a Padz</h1>
-                        <p className="text-gray-400">Inicia sesión para gestionar tus proyectos</p>
                     </div>
+                    <div className="max-w-md space-y-4">
+                        <p className="text-sm leading-6 text-white/70">Una interfaz limpia, sin ruido visual, para entrar, crear y mover trabajo sin distracciones.</p>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                                <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">Diseño</p>
+                                <p className="mt-2 text-sm text-white/80">Minimal, plano y consistente.</p>
+                            </div>
+                            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                                <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">Foco</p>
+                                <p className="mt-2 text-sm text-white/80">Menos sombra, menos ruido.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="flex items-center justify-center p-8 md:p-12"
+                >
+                    <div className="w-full max-w-md">
+                        <div className="mb-8">
+                            <h2 className="text-3xl font-semibold text-[#111111] mb-2">Bienvenido</h2>
+                            <p className="text-[#6b6b6f]">Inicia sesión para entrar a tu espacio de trabajo.</p>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
                         {error && (
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
@@ -72,7 +89,7 @@ const LoginPage: React.FC = () => {
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="block w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all"
+                                    className="block w-full pl-11 pr-4 py-3 bg-[#f5f2ec] border border-black/10 rounded-xl text-[#111111] placeholder:text-[#8b8b8f] focus:outline-none focus:border-black/30 transition-colors"
                                     placeholder="tu@email.com"
                                     required
                                 />
@@ -82,7 +99,7 @@ const LoginPage: React.FC = () => {
                         <div className="space-y-2">
                             <div className="flex justify-between items-center ml-1">
                                 <label className="text-sm font-medium text-gray-300">Contraseña</label>
-                                <a href="#" className="text-xs text-orange-400 hover:text-orange-300 transition-colors">¿Olvidaste tu contraseña?</a>
+                                <a href="#" className="text-xs text-[#111111] underline underline-offset-4 decoration-black/30 hover:decoration-black transition-colors">¿Olvidaste tu contraseña?</a>
                             </div>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-orange-500 transition-colors">
@@ -92,7 +109,7 @@ const LoginPage: React.FC = () => {
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="block w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all"
+                                    className="block w-full pl-11 pr-4 py-3 bg-[#f5f2ec] border border-black/10 rounded-xl text-[#111111] placeholder:text-[#8b8b8f] focus:outline-none focus:border-black/30 transition-colors"
                                     placeholder="••••••••"
                                     required
                                 />
@@ -102,7 +119,7 @@ const LoginPage: React.FC = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full py-4 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl shadow-lg shadow-orange-950/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
+                            className="w-full py-4 bg-[#111111] text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
                         >
                             {isLoading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -112,14 +129,15 @@ const LoginPage: React.FC = () => {
                         </button>
                     </form>
 
-                    <p className="mt-8 text-center text-gray-400">
+                        <p className="mt-8 text-center text-[#6b6b6f]">
                         ¿No tienes cuenta?{' '}
-                        <Link to="/register" className="text-orange-400 hover:text-orange-300 font-medium transition-colors">
+                        <Link to="/register" className="text-[#111111] underline underline-offset-4 decoration-black/30 hover:decoration-black transition-colors">
                             Regístrate gratis
                         </Link>
                     </p>
-                </div>
-            </motion.div>
+                    </div>
+                </motion.div>
+            </div>
         </div>
     );
 };

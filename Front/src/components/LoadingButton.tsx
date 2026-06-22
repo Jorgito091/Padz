@@ -7,7 +7,7 @@ type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 export const LoadingButton: React.FC<Props> = ({ isLoading, children, disabled, ...rest }) => (
   <button
     disabled={isLoading || disabled}
-    className={`relative flex items-center justify-center rounded bg-indigo-600 px-4 py-2 text-white transition-opacity hover:bg-indigo-500 disabled:opacity-50 ${isLoading ? "cursor-wait" : ""}`}
+    className={`relative flex items-center justify-center rounded-lg bg-[#111111] px-4 py-2 text-white transition-colors hover:bg-black disabled:opacity-50 ${isLoading ? "cursor-wait" : ""}`}
     {...rest}
   >
     {isLoading && (
