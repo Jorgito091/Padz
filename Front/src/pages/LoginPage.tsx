@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, AlertCircle, Loader2, Moon, Sun } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Logo from '../components/Logo';
@@ -13,7 +13,7 @@ const LoginPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const { login } = useAuth();
-    const { theme, toggleTheme } = useTheme();
+    const { theme } = useTheme();
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -37,20 +37,6 @@ const LoginPage: React.FC = () => {
         <div className={`min-h-screen transition-colors duration-300 ${
             isDark ? 'bg-[#111111]' : 'bg-[#f5f2ec]'
         } px-4 py-6 md:py-10`}>
-            {/* Theme Toggle */}
-            <div className="absolute top-6 right-6">
-                <button
-                    onClick={toggleTheme}
-                    className={`p-3 rounded-full transition-colors ${
-                        isDark 
-                            ? 'bg-[#2a2a2a] text-yellow-400 hover:bg-[#3a3a3a]'
-                            : 'bg-white text-gray-700 hover:bg-gray-100'
-                    }`}
-                    aria-label="Toggle theme"
-                >
-                    {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                </button>
-            </div>
 
             <div className={`mx-auto grid min-h-[calc(100vh-3rem)] max-w-6xl overflow-hidden rounded-[32px] border transition-colors duration-300 ${
                 isDark 
