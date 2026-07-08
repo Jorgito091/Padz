@@ -43,6 +43,18 @@ import { useBoardData } from '../hooks/useBoardData';
 // Types
 import { Board, List, Card, LabelData, CommentData, BoardMember } from '../types';
 
+const isHexColor = (value?: string) => Boolean(value && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(value));
+
+const getBoardBackgroundStyle = (bgColor?: string): React.CSSProperties | undefined => {
+    if (!bgColor || !isHexColor(bgColor)) {
+        return undefined;
+    }
+
+    return {
+        backgroundColor: bgColor,
+    };
+};
+
 const DashboardPage: React.FC = () => {
     const { user, logout, updateUser } = useAuth();
     const {
@@ -108,11 +120,26 @@ const DashboardPage: React.FC = () => {
         handleToggleStar(board.id);
     };
 
+    const boardBackgroundStyle = view === 'board' ? getBoardBackgroundStyle(selectedBoard?.bgColor) : undefined;
+
     return (
-        <div className="min-h-screen flex flex-col bg-[#f5f2ec] text-[#111111]">
+        <div
+            className="min-h-screen flex flex-col bg-[#f5f2ec] text-[#111111] transition-colors duration-300"
+            style={boardBackgroundStyle}
+        >
+            {view === 'board' && selectedBoard?.bgColor && (
+                <div className="pointer-events-none fixed inset-0 overflow-hidden">
+                    <div
+                        className="absolute -top-24 -left-24 h-72 w-72 rounded-full blur-3xl opacity-30"
+                        style={{ backgroundColor: selectedBoard.bgColor }}
+                    />
+                    <div className="absolute top-40 right-[-80px] h-80 w-80 rounded-full bg-white/20 blur-3xl opacity-60" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.28),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.12),transparent_28%)]" />
+                </div>
+            )}
 
             {/* Navbar */}
-            <nav className="sticky top-0 z-50 bg-[#f5f2ec]/95 backdrop-blur-sm border-b border-black/10 flex justify-between items-center px-8 py-4 mb-8">
+            <nav className={`sticky top-0 z-50 backdrop-blur-md border-b border-black/10 flex justify-between items-center px-8 py-4 mb-8 transition-colors ${view === 'board' ? 'bg-white/50' : 'bg-white/75'}`}>
                 <div className="flex items-center gap-8">
                     <div
                         className="flex items-center gap-3 cursor-pointer group"

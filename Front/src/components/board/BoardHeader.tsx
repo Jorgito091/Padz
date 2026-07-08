@@ -12,11 +12,17 @@ interface BoardHeaderProps {
 
 export const BoardHeader: React.FC<BoardHeaderProps> = ({ board, onBack, onMembersClick, onSettingsClick, className }) => {
     return (
-        <div className={`flex flex-col md:flex-row md:items-center gap-4 mb-8 bg-white p-6 rounded-2xl border border-black/10 relative overflow-hidden transition-colors ${className ?? ''}`.trim()}>
+        <div className={`relative mb-8 overflow-hidden rounded-[28px] border border-white/30 bg-white/55 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl transition-colors ${className ?? ''}`.trim()}>
+            <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-white/20 to-transparent pointer-events-none" />
+            <div
+                className="absolute left-0 top-0 h-full w-1.5"
+                style={{ backgroundColor: board.bgColor || '#f43f5e' }}
+            />
+            <div className="relative flex flex-col gap-4 md:flex-row md:items-center">
             <div className="flex items-center gap-4 flex-1">
                 <button
                     onClick={onBack}
-                    className="p-2.5 bg-[#f5f2ec] border border-black/10 rounded-xl text-[#6b6b6f] hover:text-[#111111] transition-colors hover:bg-[#f0ece5]"
+                    className="p-2.5 bg-white/70 border border-black/10 rounded-xl text-[#6b6b6f] hover:text-[#111111] transition-colors hover:bg-white"
                 >
                     <ArrowLeft size={20} />
                 </button>
@@ -27,7 +33,7 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({ board, onBack, onMembe
 
                         <div className="flex -space-x-2 ml-2">
                             {/* Owner */}
-                            <div className="w-8 h-8 rounded-full border border-black/10 overflow-hidden bg-[#f5f2ec] flex items-center justify-center text-[10px] font-bold text-[#111111]" title={`Dueño: ${board.owner?.name}`}>
+                            <div className="w-8 h-8 rounded-full border border-black/10 overflow-hidden bg-white/80 flex items-center justify-center text-[10px] font-bold text-[#111111]" title={`Dueño: ${board.owner?.name}`}>
                                 {board.owner?.avatar ? (
                                     <img src={board.owner.avatar} className="w-full h-full object-cover" />
                                 ) : (
@@ -36,7 +42,7 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({ board, onBack, onMembe
                             </div>
                             {/* Members */}
                             {board.members?.map(m => (
-                                <div key={m.id} className="w-8 h-8 rounded-full border border-black/10 overflow-hidden bg-[#f5f2ec] flex items-center justify-center text-[10px] font-bold text-[#111111]" title={m.user.name}>
+                                <div key={m.id} className="w-8 h-8 rounded-full border border-black/10 overflow-hidden bg-white/80 flex items-center justify-center text-[10px] font-bold text-[#111111]" title={m.user.name}>
                                     {m.user.avatar ? (
                                         <img src={m.user.avatar} className="w-full h-full object-cover" />
                                     ) : (
@@ -46,7 +52,7 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({ board, onBack, onMembe
                             ))}
                             <button
                                 onClick={onMembersClick}
-                                className="w-8 h-8 rounded-full border border-black/10 bg-white hover:bg-[#f5f2ec] flex items-center justify-center transition-colors text-[#6b6b6f] hover:text-[#111111]"
+                                className="w-8 h-8 rounded-full border border-black/10 bg-white/80 hover:bg-white flex items-center justify-center transition-colors text-[#6b6b6f] hover:text-[#111111]"
                                 title="Gestionar miembros"
                             >
                                 <Plus size={14} />
@@ -54,14 +60,15 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({ board, onBack, onMembe
                         </div>
                     </div>
                     {board.description && (
-                        <p className="text-sm text-gray-400 mt-1 max-w-2xl line-clamp-1">{board.description}</p>
+                        <p className="text-sm text-[#6b6b6f] mt-1 max-w-2xl line-clamp-1">{board.description}</p>
                     )}
                 </div>
+            </div>
             </div>
 
             <button
                 onClick={onSettingsClick}
-                className="p-2.5 bg-white border border-black/10 rounded-xl text-[#6b6b6f] hover:text-[#111111] transition-colors hover:bg-[#f5f2ec] flex items-center gap-2 font-medium"
+                className="relative z-10 p-2.5 bg-white/80 border border-black/10 rounded-xl text-[#6b6b6f] hover:text-[#111111] transition-colors hover:bg-white flex items-center gap-2 font-medium"
                 title="Configuración del tablero"
             >
                 <Settings size={20} />

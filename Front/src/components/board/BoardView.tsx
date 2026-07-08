@@ -82,7 +82,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
         return (
             <div className={`flex h-full min-h-0 gap-6 overflow-x-auto overflow-y-hidden items-start scrollbar-hide pb-4 ${className ?? ''}`.trim()}>
                 {[1, 2, 3].map(n => (
-                    <div key={n} className="min-w-[320px] h-64 rounded-2xl bg-white/5 animate-pulse" />
+                    <div key={n} className="min-w-[320px] h-64 rounded-[28px] bg-white/12 animate-pulse backdrop-blur-sm border border-white/20" />
                 ))}
             </div>
         );
@@ -98,22 +98,22 @@ export const BoardView: React.FC<BoardViewProps> = ({
         >
             <div className={`flex h-full min-h-0 gap-6 overflow-x-auto overflow-y-hidden items-start scrollbar-hide pb-4 ${className ?? ''}`.trim()}>
                 {board.lists?.map((list) => (
-                    <div key={list.id} className="flex h-full min-h-0 min-w-[320px] max-w-[320px] flex-col bg-white border border-black/10 rounded-2xl p-4">
-                        <div className="flex justify-between items-center mb-5 px-1 text-[#111111] group/list-header">
-                            <h3 className="font-semibold uppercase text-xs tracking-widest">{list.title}</h3>
+                    <div key={list.id} className="flex h-full min-h-0 min-w-[320px] max-w-[320px] flex-col rounded-[28px] border border-white/35 bg-white/65 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.08)] backdrop-blur-xl">
+                        <div className="mb-5 flex items-center justify-between px-1 text-[#111111] group/list-header">
+                            <h3 className="font-semibold uppercase text-[11px] tracking-[0.2em] text-[#111111]">{list.title}</h3>
                             <div className="flex gap-1 items-center">
                                 {canEdit && (
                                     <>
                                         <button
                                             onClick={() => onDeleteList(list.id)}
-                                            className="p-1.5 hover:bg-[#f5f2ec] rounded-lg text-[#8b8b8f] hover:text-[#111111] transition-colors opacity-0 group-hover/list-header:opacity-100"
+                                            className="p-1.5 rounded-lg text-[#8b8b8f] transition-all opacity-0 group-hover/list-header:opacity-100 hover:bg-black/5 hover:text-[#111111]"
                                             title="Eliminar lista"
                                         >
                                             <Trash2 size={15} />
                                         </button>
                                         <button
                                             onClick={() => { setActiveListId(list.id); setNewCardTitle(''); }}
-                                            className="p-1.5 hover:bg-[#f5f2ec] rounded-lg text-[#8b8b8f] hover:text-[#111111] transition-colors">
+                                            className="p-1.5 rounded-lg text-[#8b8b8f] transition-all hover:bg-black/5 hover:text-[#111111]">
                                             <Logo size={18} />
                                         </button>
                                     </>
@@ -183,7 +183,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                                         setActiveListId(list.id);
                                         setNewCardTitle('');
                                     }}
-                                    className="w-full mt-5 py-2.5 px-3 text-left text-sm text-[#6b6b6f] hover:text-[#111111] hover:bg-[#f5f2ec] rounded-xl transition-colors flex items-center gap-2 shrink-0"
+                                    className="w-full mt-5 py-2.5 px-3 text-left text-sm text-[#111111] hover:bg-white/75 rounded-xl transition-colors flex items-center gap-2 shrink-0 border border-black/5 bg-white/50"
                                 >
                                     <Plus size={16} /> Añadir tarjeta
                                 </button>
@@ -194,24 +194,24 @@ export const BoardView: React.FC<BoardViewProps> = ({
 
                 {canEdit && (
                     isCreatingList ? (
-                        <form onSubmit={handleCreateListSubmit} className="min-w-[320px] bg-white border border-black/10 rounded-2xl p-4 shrink-0">
+                        <form onSubmit={handleCreateListSubmit} className="min-w-[320px] rounded-[28px] border border-white/35 bg-white/65 p-4 shrink-0 shadow-[0_18px_50px_rgba(0,0,0,0.08)] backdrop-blur-xl">
                             <input
                                 autoFocus
                                 type="text"
                                 value={newListTitle}
                                 onChange={(e) => setNewListTitle(e.target.value)}
                                 placeholder="Nombre de la lista..."
-                                className="w-full bg-transparent border-none focus:ring-0 text-[#111111] font-medium mb-4"
+                                className="w-full bg-white/70 border border-black/10 rounded-xl px-3 py-2 text-[#111111] font-medium mb-4 focus:outline-none focus:border-black/20"
                             />
                             <div className="flex gap-2">
-                                <button type="submit" className="flex-1 py-2 bg-[#111111] text-white rounded-lg text-sm font-medium">Crear lista</button>
-                                <button onClick={() => setIsCreatingList(false)} className="px-3 py-2 bg-[#f5f2ec] rounded-lg text-[#6b6b6f]"><X size={18} /></button>
+                                <button type="submit" className="flex-1 py-2 bg-[#111111] text-white rounded-lg text-sm font-medium shadow-sm">Crear lista</button>
+                                <button onClick={() => setIsCreatingList(false)} className="px-3 py-2 bg-white/70 rounded-lg text-[#6b6b6f] border border-black/10"><X size={18} /></button>
                             </div>
                         </form>
                     ) : (
                         <button
                             onClick={() => setIsCreatingList(true)}
-                            className="min-w-[320px] bg-white hover:bg-[#f5f2ec] rounded-2xl p-5 text-left font-semibold text-[#6b6b6f] hover:text-[#111111] transition-colors border-dashed border border-black/10 flex items-center gap-3 shrink-0"
+                            className="min-w-[320px] rounded-[28px] border border-white/35 bg-white/55 p-5 text-left font-semibold text-[#111111] transition-colors hover:bg-white/70 flex items-center gap-3 shrink-0 shadow-[0_18px_50px_rgba(0,0,0,0.08)] backdrop-blur-xl"
                         >
                             <Plus size={20} /> Añadir lista
                         </button>
@@ -221,7 +221,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
 
             <DragOverlay>
                 {activeId ? (
-                    <div className="bg-white p-4 rounded-xl border border-black/10 text-[#111111] rotate-1 cursor-grabbing">
+                    <div className="rounded-xl border border-black/10 bg-white/90 p-4 text-[#111111] rotate-1 cursor-grabbing shadow-lg backdrop-blur">
                         {board.lists?.flatMap(l => l.cards).find(c => c.id === activeId)?.title}
                     </div>
                 ) : null}
