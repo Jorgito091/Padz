@@ -4,6 +4,8 @@ import prisma from '../prisma';
 import { AppError } from '../utils/AppError';
 import { catchAsync } from '../utils/catchAsync';
 
+const defaultBoardColor = '#f43f5e';
+
 export const getBoards = catchAsync(async (req: AuthRequest, res: Response) => {
     const boards = await prisma.board.findMany({
         where: {
@@ -84,7 +86,7 @@ export const createBoard = catchAsync(async (req: AuthRequest, res: Response) =>
         data: {
             title,
             bgImage,
-            bgColor,
+            bgColor: bgColor || defaultBoardColor,
             description,
             ownerId: req.userId
         },
@@ -106,7 +108,7 @@ export const updateBoard = catchAsync(async (req: AuthRequest, res: Response) =>
         data: {
             title,
             bgImage,
-            bgColor,
+            ...(bgColor ? { bgColor } : {}),
             description
         }
     });

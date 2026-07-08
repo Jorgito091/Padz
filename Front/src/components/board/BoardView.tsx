@@ -32,6 +32,7 @@ interface BoardViewProps {
     onCreateCard: (title: string, listId: string) => Promise<boolean>;
     onDeleteCard: (cardId: string, listId: string) => Promise<void>;
     onEditCard: (card: Card) => void;
+    className?: string;
 }
 
 export const BoardView: React.FC<BoardViewProps> = ({
@@ -46,7 +47,8 @@ export const BoardView: React.FC<BoardViewProps> = ({
     onDeleteList,
     onCreateCard,
     onDeleteCard,
-    onEditCard
+    onEditCard,
+    className
 }) => {
     const { user } = useAuth();
     const [isCreatingList, setIsCreatingList] = useState(false);
@@ -78,7 +80,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
 
     if (boardLoading) {
         return (
-            <div className="flex gap-6 overflow-x-auto pb-6 items-start scrollbar-hide min-h-[500px]">
+            <div className={`flex h-full min-h-0 gap-6 overflow-x-auto overflow-y-hidden items-start scrollbar-hide pb-4 ${className ?? ''}`.trim()}>
                 {[1, 2, 3].map(n => (
                     <div key={n} className="min-w-[320px] h-64 rounded-2xl bg-white/5 animate-pulse" />
                 ))}
@@ -94,9 +96,9 @@ export const BoardView: React.FC<BoardViewProps> = ({
             onDragOver={canEdit ? onDragOver : undefined}
             onDragEnd={canEdit ? onDragEnd : undefined}
         >
-            <div className="flex gap-6 overflow-x-auto pb-6 items-start scrollbar-hide min-h-[500px]">
+            <div className={`flex h-full min-h-0 gap-6 overflow-x-auto overflow-y-hidden items-start scrollbar-hide pb-4 ${className ?? ''}`.trim()}>
                 {board.lists?.map((list) => (
-                    <div key={list.id} className="min-w-[320px] max-w-[320px] bg-white border border-black/10 rounded-2xl p-4">
+                    <div key={list.id} className="flex h-full min-h-0 min-w-[320px] max-w-[320px] flex-col bg-white border border-black/10 rounded-2xl p-4">
                         <div className="flex justify-between items-center mb-5 px-1 text-[#111111] group/list-header">
                             <h3 className="font-semibold uppercase text-xs tracking-widest">{list.title}</h3>
                             <div className="flex gap-1 items-center">
@@ -124,7 +126,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                             items={list.cards}
                             strategy={verticalListSortingStrategy}
                         >
-                            <div className="space-y-3 min-h-[10px]">
+                            <div className="flex-1 min-h-0 space-y-3 overflow-y-auto pr-1 scrollbar-hide">
                                 {list.cards.map((card) => (
                                     <SortableCard
                                         key={card.id}
@@ -146,7 +148,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
 
                         {canEdit && (
                             activeListId === list.id ? (
-                                <div className="mt-4 space-y-2">
+                                <div className="mt-4 space-y-2 shrink-0">
                                     <textarea
                                         autoFocus
                                         value={newCardTitle}
@@ -181,7 +183,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                                         setActiveListId(list.id);
                                         setNewCardTitle('');
                                     }}
-                                    className="w-full mt-5 py-2.5 px-3 text-left text-sm text-[#6b6b6f] hover:text-[#111111] hover:bg-[#f5f2ec] rounded-xl transition-colors flex items-center gap-2"
+                                    className="w-full mt-5 py-2.5 px-3 text-left text-sm text-[#6b6b6f] hover:text-[#111111] hover:bg-[#f5f2ec] rounded-xl transition-colors flex items-center gap-2 shrink-0"
                                 >
                                     <Plus size={16} /> Añadir tarjeta
                                 </button>
@@ -192,7 +194,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
 
                 {canEdit && (
                     isCreatingList ? (
-                        <form onSubmit={handleCreateListSubmit} className="min-w-[320px] bg-white border border-black/10 rounded-2xl p-4">
+                        <form onSubmit={handleCreateListSubmit} className="min-w-[320px] bg-white border border-black/10 rounded-2xl p-4 shrink-0">
                             <input
                                 autoFocus
                                 type="text"
@@ -209,7 +211,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                     ) : (
                         <button
                             onClick={() => setIsCreatingList(true)}
-                            className="min-w-[320px] bg-white hover:bg-[#f5f2ec] rounded-2xl p-5 text-left font-semibold text-[#6b6b6f] hover:text-[#111111] transition-colors border-dashed border border-black/10 flex items-center gap-3"
+                            className="min-w-[320px] bg-white hover:bg-[#f5f2ec] rounded-2xl p-5 text-left font-semibold text-[#6b6b6f] hover:text-[#111111] transition-colors border-dashed border border-black/10 flex items-center gap-3 shrink-0"
                         >
                             <Plus size={20} /> Añadir lista
                         </button>

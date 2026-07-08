@@ -7,11 +7,12 @@ interface BoardHeaderProps {
     onBack: () => void;
     onMembersClick: () => void;
     onSettingsClick: () => void;
+    className?: string;
 }
 
-export const BoardHeader: React.FC<BoardHeaderProps> = ({ board, onBack, onMembersClick, onSettingsClick }) => {
+export const BoardHeader: React.FC<BoardHeaderProps> = ({ board, onBack, onMembersClick, onSettingsClick, className }) => {
     return (
-        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-8 bg-white p-6 rounded-2xl border border-black/10 relative overflow-hidden transition-colors">
+        <div className={`flex flex-col md:flex-row md:items-center gap-4 mb-8 bg-white p-6 rounded-2xl border border-black/10 relative overflow-hidden transition-colors ${className ?? ''}`.trim()}>
             <div className="flex items-center gap-4 flex-1">
                 <button
                     onClick={onBack}
