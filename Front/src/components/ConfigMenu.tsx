@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-
-type Theme = 'light' | 'dark' | 'gray';
 
 export const ConfigMenu: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
 
-  const themes: { value: Theme; label: string; icon: JSX.Element }[] = [
+  const themes: { value: 'light' | 'dark'; label: string; icon: JSX.Element }[] = [
     { value: 'light', label: 'Light', icon: <Sun className="w-4 h-4" /> },
-    { value: 'dark', label: 'Dark', icon: <Moon className="w-4 h-4" /> },
-    { value: 'gray', label: 'Gray', icon: <Monitor className="w-4 h-4" /> },
+    { value: 'dark', label: 'Dark', icon: <Moon className="w-4 h-4" /> }
   ];
 
   return (

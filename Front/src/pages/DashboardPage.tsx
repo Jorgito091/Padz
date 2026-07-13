@@ -190,68 +190,70 @@ const DashboardPage: React.FC = () => {
             </nav>
 
             <main className="max-w-7xl mx-auto w-full flex-1 min-h-0 px-6 pb-12 relative z-10">
-                <AnimatePresence mode="wait">
-                    {view === 'dashboard' ? (
-                        <motion.div
-                            key="dashboard"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="h-full"
-                        >
-                            <BoardGrid
-                                boards={boards}
-                                searchTerm={searchTerm}
-                                onSearchChange={setSearchTerm}
-                                onCreateBoard={openCreateBoardModal}
-                                onEditBoard={openEditBoardModal}
-                                onDeleteBoard={onDeleteBoardWrapper}
-                                onToggleStar={onToggleStarWrapper}
-                                onBoardClick={handleBoardClick}
-                                activeId={activeId}
-                                sensors={sensors}
-                                onDragStart={handleDragStart}
-                                onDragEnd={handleDragEnd}
-                                user={user}
-                            />
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key="board"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="flex h-full min-h-0 flex-col"
-                        >
-                            {selectedBoard && (
-                                <div className="flex h-full min-h-0 flex-col">
-                                    <BoardHeader
-                                        board={selectedBoard}
-                                        className="shrink-0"
-                                        onBack={() => setView('dashboard')}
-                                        onMembersClick={() => setIsMembersModalOpen(true)}
-                                        onSettingsClick={() => openEditBoardModal(selectedBoard)}
-                                    />
-                                    <BoardView
-                                        board={selectedBoard}
-                                        className="flex-1 min-h-0"
-                                        boardLoading={boardLoading}
-                                        activeId={activeId}
-                                        sensors={sensors}
-                                        onDragStart={handleDragStart}
-                                        onDragOver={handleDragOver}
-                                        onDragEnd={handleDragEnd}
-                                        onCreateList={handleCreateList}
-                                        onDeleteList={handleDeleteList}
-                                        onCreateCard={handleCreateCard}
-                                        onDeleteCard={handleDeleteCard}
-                                        onEditCard={setEditingCard}
-                                    />
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                <div className="board-fixed-theme h-full">
+                    <AnimatePresence mode="wait">
+                        {view === 'dashboard' ? (
+                            <motion.div
+                                key="dashboard"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                className="h-full"
+                            >
+                                <BoardGrid
+                                    boards={boards}
+                                    searchTerm={searchTerm}
+                                    onSearchChange={setSearchTerm}
+                                    onCreateBoard={openCreateBoardModal}
+                                    onEditBoard={openEditBoardModal}
+                                    onDeleteBoard={onDeleteBoardWrapper}
+                                    onToggleStar={onToggleStarWrapper}
+                                    onBoardClick={handleBoardClick}
+                                    activeId={activeId}
+                                    sensors={sensors}
+                                    onDragStart={handleDragStart}
+                                    onDragEnd={handleDragEnd}
+                                    user={user}
+                                />
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="board"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="flex h-full min-h-0 flex-col"
+                            >
+                                {selectedBoard && (
+                                    <div className="flex h-full min-h-0 flex-col">
+                                        <BoardHeader
+                                            board={selectedBoard}
+                                            className="shrink-0"
+                                            onBack={() => setView('dashboard')}
+                                            onMembersClick={() => setIsMembersModalOpen(true)}
+                                            onSettingsClick={() => openEditBoardModal(selectedBoard)}
+                                        />
+                                        <BoardView
+                                            board={selectedBoard}
+                                            className="flex-1 min-h-0"
+                                            boardLoading={boardLoading}
+                                            activeId={activeId}
+                                            sensors={sensors}
+                                            onDragStart={handleDragStart}
+                                            onDragOver={handleDragOver}
+                                            onDragEnd={handleDragEnd}
+                                            onCreateList={handleCreateList}
+                                            onDeleteList={handleDeleteList}
+                                            onCreateCard={handleCreateCard}
+                                            onDeleteCard={handleDeleteCard}
+                                            onEditCard={setEditingCard}
+                                        />
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
 
                 {/* Modals */}
                 <AnimatePresence>

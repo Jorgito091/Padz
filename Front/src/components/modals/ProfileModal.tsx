@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { UserCog, LogOut, Sun, Moon, Monitor } from 'lucide-react';
+import { UserCog, LogOut, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
@@ -13,6 +13,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
     const { user, logout, updateUser } = useAuth();
     const { theme, setTheme } = useTheme();
     const [userForm, setUserForm] = useState({ name: '', avatar: '' });
+    const [pendingTheme, setPendingTheme] = useState(theme);
 
     useEffect(() => {
         if (user) {
@@ -20,22 +21,26 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
         }
     }, [user]);
 
+    useEffect(() => {
+        setPendingTheme(theme);
+    }, [theme]);
+
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             const response = await api.put('/auth/profile', userForm);
             const { user: updatedUser } = response.data;
             updateUser(updatedUser);
+            setTheme(pendingTheme);
             onClose();
         } catch (error) {
             console.error('Error updating profile:', error);
         }
     };
 
-    const themes: { value: 'light' | 'dark' | 'gray'; label: string; icon: React.ReactNode }[] = [
+    const themes: { value: 'light' | 'dark'; label: string; icon: React.ReactNode }[] = [
         { value: 'light', label: 'Claro', icon: <Sun size={16} /> },
-        { value: 'dark', label: 'Oscuro', icon: <Moon size={16} /> },
-        { value: 'gray', label: 'Gris', icon: <Monitor size={16} /> }
+        { value: 'dark', label: 'Oscuro', icon: <Moon size={16} /> }
     ];
 
     return (
@@ -70,14 +75,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-[#6b6b6f] mb-2">Tema del Sitio</label>
-                        <div className="grid grid-cols-3 gap-2 bg-[#f5f2ec] p-1 rounded-xl border border-black/10">
+                        <div className="grid grid-cols-2 gap-2 bg-[#f5f2ec] p-1 rounded-xl border border-black/10">
                             {themes.map(t => {
-                                const isActive = theme === t.value;
+                                const isActive = pendingTheme === t.value;
                                 return (
                                     <button
                                         key={t.value}
                                         type="button"
-                                        onClick={() => setTheme(t.value)}
+                                        onClick={() => setPendingTheme(t.value)}
                                         className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                                             isActive
                                                 ? 'bg-white text-[#111111] shadow-sm font-semibold'

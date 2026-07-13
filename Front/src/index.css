@@ -30,19 +30,7 @@
   --sidebar-text: #ffffff;
 }
 
-:root.gray {
-  --bg-primary: #2d3748;
-  --bg-secondary: #1a202c;
-  --text-primary: #f7fafc;
-  --text-secondary: #cbd5e0;
-  --text-tertiary: #a0aec0;
-  --accent: #cbd5e0;
-  --accent-hover: #e2e8f0;
-  --card-bg: #1a202c;
-  --border: rgba(255, 255, 255, 0.15);
-  --sidebar-bg: #171923;
-  --sidebar-text: #ffffff;
-}
+
 
 body {
   @apply font-sans antialiased transition-colors duration-300;
@@ -100,83 +88,117 @@ html {
   background-color: var(--bg-primary) !important;
 }
 
-.dark .bg-\[\#f5f2ec\]\/95, .gray .bg-\[\#f5f2ec\]\/95 {
+.dark .bg-\[#f5f2ec\]\/95 {
   background-color: rgba(17, 17, 17, 0.95) !important;
 }
-.gray .bg-\[\#f5f2ec\]\/95 {
-  background-color: rgba(45, 55, 72, 0.95) !important;
-}
 
-.dark .bg-white, .gray .bg-white {
+.dark .bg-white {
   background-color: var(--bg-secondary) !important;
 }
 
-.dark .bg-white\/70, .gray .bg-white\/70 {
-  background-color: rgba(26, 26, 26, 0.7) !important;
-}
-
-.dark .bg-white\/90, .gray .bg-white\/90 {
-  background-color: rgba(26, 26, 26, 0.9) !important;
-}
-
 /* Override text colors */
-.dark .text-\[\#111111\], .gray .text-\[\#111111\] {
+.dark .text-\[\#111111\] {
   color: var(--text-primary) !important;
 }
 
-.dark .text-\[\#6b6b6f\], .gray .text-\[\#6b6b6f\] {
+.dark .text-\[#6b6b6f\] {
   color: var(--text-secondary) !important;
 }
 
-.dark .text-\[\#8b8b8f\], .gray .text-\[\#8b8b8f\] {
+.dark .text-\[#8b8b8f\] {
   color: var(--text-tertiary) !important;
 }
 
-.dark .hover\:text-\[\#111111\]:hover, .gray .hover\:text-\[\#111111\]:hover {
+.dark .hover\:text-\[\#111111\]:hover {
   color: var(--text-primary) !important;
 }
 
 /* Override border colors */
-.dark .border-black\/10, .gray .border-black\/10 {
+.dark .border-black\/10 {
   border-color: var(--border) !important;
 }
 
-.dark .border-black\/5, .gray .border-black\/5 {
-  border-color: rgba(255, 255, 255, 0.05) !important;
-}
-
-.dark .border-black\/15, .gray .border-black\/15 {
-  border-color: rgba(255, 255, 255, 0.15) !important;
-}
-
 /* Hover background adjustments */
-.dark .hover\:bg-\[\#f5f2ec\]:hover, .gray .hover\:bg-\[\#f5f2ec\]:hover {
+.dark .hover\:bg-\[#f5f2ec\]:hover {
   background-color: var(--bg-primary) !important;
 }
 
-.dark .hover\:bg-\[\#efe9df\]:hover, .gray .hover\:bg-\[\#efe9df\]:hover {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-}
-
-.dark .hover\:bg-\[\#efe9df\]\/50:hover, .gray .hover\:bg-\[\#efe9df\]\/50:hover {
-  background-color: rgba(255, 255, 255, 0.03) !important;
-}
-
-.dark .hover\:bg-\[\#f0ece5\]:hover, .gray .hover\:bg-\[\#f0ece5\]:hover {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-}
-
-.dark .hover\:bg-\[\#faf8f4\]:hover, .gray .hover\:bg-\[\#faf8f4\]:hover {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-}
-
 /* Override main button bg-[#111111] with white/accent background in dark mode */
-.dark .bg-\[\#111111\], .gray .bg-\[\#111111\] {
+.dark .bg-\[\#111111\] {
   background-color: var(--accent) !important;
   color: var(--bg-primary) !important;
 }
-.dark .hover\:bg-black:hover, .gray .hover\:bg-black:hover {
+.dark .hover\:bg-black:hover {
   background-color: var(--accent-hover) !important;
+}
+
+/* Keep board surfaces visually stable when the app theme changes */
+.board-fixed-theme .bg-white {
+  background-color: #ffffff !important;
+}
+
+.board-fixed-theme .bg-white\/50 {
+  background-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.board-fixed-theme .bg-white\/55 {
+  background-color: rgba(255, 255, 255, 0.55) !important;
+}
+
+.board-fixed-theme .bg-white\/65 {
+  background-color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.board-fixed-theme .bg-white\/70 {
+  background-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.board-fixed-theme .bg-white\/75 {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.board-fixed-theme .bg-white\/80 {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.board-fixed-theme .bg-white\/90 {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.board-fixed-theme .bg-\[\#f5f2ec\] {
+  background-color: #f5f2ec !important;
+}
+
+.board-fixed-theme .bg-\[\#f5f2ec\]\/95 {
+  background-color: rgba(245, 242, 236, 0.95) !important;
+}
+
+.board-fixed-theme .text-\[\#111111\] {
+  color: #111111 !important;
+}
+
+.board-fixed-theme .text-\[\#6b6b6f\] {
+  color: #6b6b6f !important;
+}
+
+.board-fixed-theme .text-\[\#8b8b8f\] {
+  color: #8b8b8f !important;
+}
+
+.board-fixed-theme .border-black\/10 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.board-fixed-theme .border-black\/5 {
+  border-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.board-fixed-theme .hover\:bg-\[\#f5f2ec\]:hover {
+  background-color: #f5f2ec !important;
+}
+
+.board-fixed-theme .hover\:bg-white:hover {
+  background-color: #ffffff !important;
 }
 
 /* Custom scrollbar adjustments for dark/gray mode */
